@@ -9,6 +9,7 @@ started xiaohongshu-mcp. It makes a small number of read-only calls with
 pauses in between, then writes a PASS/FAIL/PARTIAL/NOT SUPPORTED matrix.
 
     uv run tests/run_live_check.py --keyword 咖啡
+    XHS_MCP_TOKEN=<AUTH_TOKEN> uv run tests/run_live_check.py --keyword 咖啡
     uv run tests/run_live_check.py --keyword 咖啡 --xhsdl-url http://127.0.0.1:5556/mcp
 
 Only read-only tools are called (search_feeds, get_feed_detail, user_profile,
@@ -20,12 +21,21 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import random
 import sys
 import time
 from pathlib import Path
 
 from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
+
+
+def make_client(url: str, token: str = "") -> Client:
+    """Client for a Streamable-HTTP MCP server, with optional Bearer token
+    (matches xiaohongshu-mcp's AUTH_TOKEN)."""
+    headers = {"Authorization": f"Bearer {token}"} if token else None
+    return Client(StreamableHttpTransport(url, headers=headers))
 
 ITEMS = [
     "搜索关键词", "获取搜索结果", "获取笔记 ID", "获取笔记标题", "获取正文", "获取发布时间",
@@ -72,8 +82,8 @@ def nonempty(v) -> bool:
     return v not in (None, "", [], {})
 
 
-async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run):
-    async with Client(url) as c:
+async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run, token: str = ""):
+    async with make_client(url, token) as c:
         tools = {t.name: t for t in await c.list_tools()}
         print(f"tools/list: {len(tools)} tools")
         login, txt = await r.call(c, "check_login_status", {}, "login")
@@ -149,7 +159,7 @@ async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run):
 
 
 async def test_xhsdl(url: str, note_urls: list[str], r: Run):
-    async with Client(url) as c:
+    async with make_client(url) as c:
         for i, u in enumerate(note_urls):
             d, txt = await r.call(c, "get_detail_data", {"url": u}, f"xhsdl_{i}")
             data = (d or {}).get("data") or {}
@@ -159,6 +169,8 @@ async def test_xhsdl(url: str, note_urls: list[str], r: Run):
 async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", default="http://localhost:18060/mcp")
+    ap.add_argument("--token", default=os.environ.get("XHS_MCP_TOKEN", ""),
+                    help="Bearer token = the AUTH_TOKEN the server was started with (or env XHS_MCP_TOKEN)")
     ap.add_argument("--keyword", required=True)
     ap.add_argument("--details", type=int, default=3, help="how many notes to open (keep small)")
     ap.add_argument("--pause", type=float, default=6.0, help="seconds between calls")
@@ -169,7 +181,7 @@ async def main():
     out.mkdir(parents=True, exist_ok=True)
     r = Run(out, a.pause)
     try:
-        await test_xpzouying(a.url, a.keyword, a.details, r)
+        await test_xpzouying(a.url, a.keyword, a.details, r, a.token)
     except Exception as e:  # report, don't hide
         print("xpzouying test aborted:", repr(e))
     for item in ITEMS:
