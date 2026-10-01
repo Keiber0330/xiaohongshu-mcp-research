@@ -1,0 +1,19 @@
+{
+  "feed_id": "fixture00000000000000000a",
+  "data": {
+    "note": {"noteId": "fixture00000000000000000a", "xsecToken": "FIXTURE_TOKEN_A",
+      "title": "FIXTURE 标题 A", "desc": "FIXTURE 正文, 含逗号, \"引号\" 和\n换行", "type": "normal",
+      "time": 1758000000000, "ipLocation": "FIXTURE省",
+      "user": {"userId": "fixtureuser0000000000001", "nickname": "FIXTURE作者1"},
+      "interactInfo": {"likedCount": "12000", "sharedCount": "34", "commentCount": "56", "collectedCount": "789"},
+      "imageList": [{"width": 1080, "height": 1440, "urlDefault": "https://example.invalid/a1.webp", "urlPre": "https://example.invalid/a1_pre.webp"},
+                    {"width": 1080, "height": 1440, "urlDefault": "https://example.invalid/a2.webp"}]},
+    "comments": {"list": [
+      {"id": "fixturecomment01", "noteId": "fixture00000000000000000a", "content": "FIXTURE 评论1", "likeCount": "3",
+       "createTime": 1758000100000, "ipLocation": "FIXTURE市", "userInfo": {"userId": "fixturecommenter01", "nickname": "FIXTURE评论者1"},
+       "subCommentCount": "1",
+       "subComments": [{"id": "fixturecomment02", "noteId": "fixture00000000000000000a", "content": "FIXTURE 回复", "likeCount": "0",
+          "createTime": 1758000200000, "userInfo": {"userId": "fixturecommenter02", "nickname": "FIXTURE评论者2"}, "subComments": []}]}
+    ], "cursor": "", "hasMore": false}
+  }
+}

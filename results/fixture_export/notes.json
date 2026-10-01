@@ -1,0 +1,75 @@
+[
+  {
+    "note_id": "fixture00000000000000000a",
+    "title": "FIXTURE 标题 A",
+    "description": "FIXTURE 正文, 含逗号, \"引号\" 和\n换行",
+    "author_name": "FIXTURE作者1",
+    "author_id": "fixtureuser0000000000001",
+    "publish_time": "2025-09-16T05:20:00+00:00",
+    "likes": "1.2万",
+    "favorites": "789",
+    "comments": "56",
+    "shares": "34",
+    "image_urls": [
+      "https://example.invalid/cover_a.webp"
+    ],
+    "video_url": "",
+    "note_url": "https://www.xiaohongshu.com/explore/fixture00000000000000000a?xsec_token=FIXTURE_TOKEN_A&xsec_source=pc_search",
+    "note_type": "normal",
+    "ip_location": "FIXTURE省",
+    "xsec_token": "FIXTURE_TOKEN_A",
+    "source": "xpzouying:get_feed_detail+xpzouying:feed_card",
+    "crawl_time": "2026-10-01T00:00:00+00:00",
+    "keyword": "FIXTURE关键词",
+    "tags": ""
+  },
+  {
+    "note_id": "fixture00000000000000000b",
+    "title": "FIXTURE 视频 B",
+    "description": "FIXTURE 视频正文",
+    "author_name": "FIXTURE作者2",
+    "author_id": "fixtureuser0000000000002",
+    "publish_time": "2025-09-22T00:13:20+00:00",
+    "likes": "88",
+    "favorites": "9",
+    "comments": "0",
+    "shares": "1",
+    "image_urls": [
+      "https://example.invalid/cover_b.webp"
+    ],
+    "video_url": "https://example.invalid/b_h264.mp4",
+    "note_url": "https://www.xiaohongshu.com/explore/fixture00000000000000000b?xsec_token=FIXTURE_TOKEN_B&xsec_source=pc_search",
+    "note_type": "video",
+    "ip_location": "",
+    "xsec_token": "FIXTURE_TOKEN_B",
+    "source": "xpzouying:get_feed_detail+xpzouying:feed_card",
+    "crawl_time": "2026-10-01T00:00:00+00:00",
+    "keyword": "FIXTURE关键词",
+    "tags": ""
+  },
+  {
+    "note_id": "fixture00000000000000000c",
+    "title": "FIXTURE 下载器作品 C",
+    "description": "FIXTURE 描述 C",
+    "author_name": "FIXTURE作者3",
+    "author_id": "fixtureuser0000000000003",
+    "publish_time": "2025-09-16T05:20:00+00:00",
+    "likes": "20",
+    "favorites": "10",
+    "comments": "2",
+    "shares": "1",
+    "image_urls": [
+      "https://example.invalid/c1.png",
+      "https://example.invalid/c2.png"
+    ],
+    "video_url": "",
+    "note_url": "https://www.xiaohongshu.com/explore/fixture00000000000000000c",
+    "note_type": "图文",
+    "tags": "FIXTURE标签1 FIXTURE标签2",
+    "source": "xhs-downloader:get_detail_data",
+    "crawl_time": "2026-10-01T00:00:00+00:00",
+    "keyword": "FIXTURE关键词",
+    "ip_location": "",
+    "xsec_token": ""
+  }
+]

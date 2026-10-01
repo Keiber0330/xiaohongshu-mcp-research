@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "xiaohongshu-mcp": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:18060/mcp"]
+    },
+    "xhs-downloader": {
+      "command": "/ABSOLUTE/PATH/TO/XHS-Downloader/.venv/bin/python",
+      "args": ["/ABSOLUTE/PATH/TO/xiaohongshu-mcp-research/tools/xhs_downloader_stdio.py"],
+      "env": { "XHS_DOWNLOADER_DIR": "/ABSOLUTE/PATH/TO/XHS-Downloader" }
+    }
+  }
+}

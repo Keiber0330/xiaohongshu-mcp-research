@@ -1,0 +1,16 @@
+{
+  "feeds": [
+    {"xsecToken": "FIXTURE_TOKEN_A", "id": "fixture00000000000000000a", "modelType": "note", "index": 0,
+     "noteCard": {"type": "normal", "displayTitle": "FIXTURE 标题 A",
+       "user": {"userId": "fixtureuser0000000000001", "nickname": "FIXTURE作者1", "avatar": "https://example.invalid/a.jpg"},
+       "interactInfo": {"liked": false, "likedCount": "1.2万", "sharedCount": "", "commentCount": "", "collectedCount": "", "collected": false},
+       "cover": {"width": 1080, "height": 1440, "urlDefault": "https://example.invalid/cover_a.webp"}}},
+    {"xsecToken": "FIXTURE_TOKEN_B", "id": "fixture00000000000000000b", "modelType": "note", "index": 1,
+     "noteCard": {"type": "video", "displayTitle": "FIXTURE 视频 B",
+       "user": {"userId": "fixtureuser0000000000002", "nickName": "FIXTURE作者2"},
+       "interactInfo": {"likedCount": "88"},
+       "cover": {"urlDefault": "https://example.invalid/cover_b.webp"}, "video": {"capa": {"duration": 31}}}},
+    {"xsecToken": "", "id": "fixture_hot_query", "modelType": "hot_query", "noteCard": {}}
+  ],
+  "count": 3
+}

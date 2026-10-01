@@ -1,0 +1,134 @@
+{
+  "url": "http://127.0.0.1:5556/mcp",
+  "probed_at": "2026-10-01T16:15:51+0000",
+  "server": {
+    "name": "XHS-Downloader",
+    "version": "2.8.stable",
+    "protocol": "2025-11-25"
+  },
+  "tools": [
+    {
+      "name": "get_detail_data",
+      "title": "获取小红书作品信息数据",
+      "description": "\n功能：输入小红书作品链接，返回该作品的信息数据，不会下载文件。\n\n参数：\nurl（必填）：小红书作品链接，格式如：\n- https://www.xiaohongshu.com/explore/...\n- https://www.xiaohongshu.com/discovery/item/...\n- https://xhslink.com/...\n\n返回：\n- message：结果提示\n- data：作品信息数据\n",
+      "input_schema": {
+        "properties": {
+          "url": {
+            "description": "小红书作品链接",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "annotations": {
+        "title": "获取小红书作品信息数据",
+        "read_only_hint": false,
+        "destructive_hint": false,
+        "idempotent_hint": true,
+        "open_world_hint": true
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": [
+            "RedNote",
+            "XiaoHongShu",
+            "小红书"
+          ]
+        }
+      }
+    },
+    {
+      "name": "download_detail",
+      "title": "下载小红书作品文件，可以返回作品信息数据",
+      "description": "\n功能：输入小红书作品链接，下载作品文件，默认不返回作品信息数据。\n\n参数：\nurl（必填）：小红书作品链接，格式如：\n- https://www.xiaohongshu.com/explore/...\n- https://www.xiaohongshu.com/discovery/item/...\n- https://xhslink.com/...\nindex（选填）：根据用户指定的图片序号（如用户说“下载第1和第3张”时，index应为 [1, 3]），生成由所需图片序号组成的列表；如果用户未指定序号，则该字段为 None\nreturn_data（可选）：是否返回作品信息数据；如需返回作品信息数据，设置此参数为 true，默认值为 false\n\n返回：\n- message：结果提示\n- data：作品信息数据，不需要返回作品信息数据时固定为 None\n",
+      "input_schema": {
+        "properties": {
+          "url": {
+            "description": "小红书作品链接",
+            "type": "string"
+          },
+          "index": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "指定需要下载的图文作品序号"
+          },
+          "return_data": {
+            "default": false,
+            "description": "是否需要返回作品信息数据",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "annotations": {
+        "title": "下载小红书作品文件，可以返回作品信息数据",
+        "read_only_hint": false,
+        "destructive_hint": false,
+        "idempotent_hint": true,
+        "open_world_hint": true
+      },
+      "meta": {
+        "fastmcp": {
+          "tags": [
+            "Download",
+            "RedNote",
+            "XiaoHongShu",
+            "下载",
+            "小红书"
+          ]
+        }
+      }
+    }
+  ],
+  "call": {
+    "tool": "get_detail_data",
+    "args": {
+      "url": "https://www.xiaohongshu.com/explore/000000000000000000000000"
+    },
+    "seconds": 1.54,
+    "is_error": false,
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"message\":\"获取小红书作品数据失败\",\"data\":{}}"
+      }
+    ],
+    "structured": {
+      "message": "获取小红书作品数据失败",
+      "data": {}
+    }
+  }
+}
