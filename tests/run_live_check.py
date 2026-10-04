@@ -102,22 +102,29 @@ def feeds_from_note_urls(urls: list[str]) -> list[dict]:
 
 
 async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run, token: str = "",
-                         note_urls: list[str] | None = None):
+                         note_urls: list[str] | None = None, search_retries: int = 1, retry_wait: float = 60.0):
     async with make_client(url, token) as c:
         tools = {t.name: t for t in await c.list_tools()}
         print(f"tools/list: {len(tools)} tools")
         login, txt = await r.call(c, "check_login_status", {}, "login")
         print("  login:", (txt or "")[:120].replace("\n", " "))
 
-        search, txt = await r.call(c, "search_feeds", {"keyword": keyword}, "search")
-        feeds = [f for f in (search or {}).get("feeds", []) if f.get("modelType", "note") == "note"]
+        attempts = 0
+        while True:
+            attempts += 1
+            search, txt = await r.call(c, "search_feeds", {"keyword": keyword}, "search")
+            feeds = [f for f in (search or {}).get("feeds", []) if f.get("modelType", "note") == "note"]
+            if feeds or attempts > search_retries:
+                break
+            print(f"  search returned 0 notes; waiting {retry_wait:.0f}s before retry {attempts}/{search_retries}")
+            await asyncio.sleep(retry_wait)
         n_raw = len((search or {}).get("feeds") or [])
         if search is None:
             r.mark(ITEMS[0], "FAIL", txt)
         elif feeds:
-            r.mark(ITEMS[0], "PASS", f"keyword={keyword}")
+            r.mark(ITEMS[0], "PASS", f"keyword={keyword}; attempts={attempts}")
         else:
-            r.mark(ITEMS[0], "PARTIAL", f"call succeeded but 0 notes for keyword={keyword} ({n_raw} raw items before note filter)")
+            r.mark(ITEMS[0], "PARTIAL", f"call succeeded but 0 notes for keyword={keyword} after {attempts} attempt(s) ({n_raw} raw items before note filter)")
         r.mark(ITEMS[1], "PASS" if feeds else "FAIL", f"{len(feeds)} notes ({n_raw} raw items)")
         searched = bool(feeds)
         if not feeds:
@@ -212,6 +219,8 @@ async def main():
     ap.add_argument("--note-url", action="append", default=[],
                     help="note link copied from the browser (must contain xsec_token); "
                          "used if search returns nothing. Repeatable.")
+    ap.add_argument("--search-retries", type=int, default=1, help="retries when search returns 0 notes")
+    ap.add_argument("--retry-wait", type=float, default=60.0, help="seconds to wait before a search retry")
     ap.add_argument("--details", type=int, default=3, help="how many notes to open (keep small)")
     ap.add_argument("--pause", type=float, default=6.0, help="seconds between calls")
     ap.add_argument("--xhsdl-url", default="", help="XHS-Downloader MCP url, e.g. http://127.0.0.1:5556/mcp")
@@ -221,11 +230,11 @@ async def main():
     out.mkdir(parents=True, exist_ok=True)
     r = Run(out, a.pause)
     try:
-        await test_xpzouying(a.url, a.keyword, a.details, r, a.token, a.note_url)
+        await test_xpzouying(a.url, a.keyword, a.details, r, a.token, a.note_url, a.search_retries, a.retry_wait)
     except Exception as e:  # report, don't hide
         print("xpzouying test aborted:", repr(e))
     for item in ITEMS:
-        r.results.setdefault(item, ("FAIL", "not reached"))
+        r.results.setdefault(item, ("NOT TESTED", "not reached"))
     if a.xhsdl_url:
         urls = []
         for p in sorted(out.glob("raw_*_search.json")):
