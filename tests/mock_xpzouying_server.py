@@ -2,6 +2,7 @@
 fixtures in tests/fixtures/. Used only to test tests/run_live_check.py plumbing.
 Returns JSON as text content, like the real server does."""
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -22,6 +23,8 @@ def check_login_status() -> str:
 
 @mcp.tool
 def search_feeds(keyword: str) -> str:
+    if os.environ.get("MOCK_EMPTY_SEARCH"):  # reproduce "logged in but 0 notes"
+        return json.dumps({"feeds": [], "count": 0})
     return _t("xpz_search_feeds.json")
 
 

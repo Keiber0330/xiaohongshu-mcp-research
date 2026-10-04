@@ -10,6 +10,8 @@ pauses in between, then writes a PASS/FAIL/PARTIAL/NOT SUPPORTED matrix.
 
     uv run tests/run_live_check.py --keyword 咖啡
     XHS_MCP_TOKEN=<AUTH_TOKEN> uv run tests/run_live_check.py --keyword 咖啡
+    # if search returns 0 notes, test the rest with a link copied from the browser:
+    ... --keyword 咖啡 --note-url "https://www.xiaohongshu.com/explore/<id>?xsec_token=..."
     uv run tests/run_live_check.py --keyword 咖啡 --xhsdl-url http://127.0.0.1:5556/mcp
 
 Only read-only tools are called (search_feeds, get_feed_detail, user_profile,
@@ -26,6 +28,7 @@ import random
 import sys
 import time
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
@@ -53,7 +56,7 @@ class Run:
         self.calls = 0
 
     def mark(self, item: str, status: str, evidence: str = ""):
-        self.results[item] = (status, evidence[:160])
+        self.results[item] = (status, " ".join(str(evidence).split())[:160])
 
     async def call(self, c: Client, tool: str, args: dict, tag: str):
         assert tool in READ_ONLY_TOOLS, tool
@@ -82,7 +85,24 @@ def nonempty(v) -> bool:
     return v not in (None, "", [], {})
 
 
-async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run, token: str = ""):
+def feeds_from_note_urls(urls: list[str]) -> list[dict]:
+    """Turn note links copied from the browser address bar
+    (https://www.xiaohongshu.com/explore/<id>?xsec_token=...) into feed stubs,
+    so detail/comment/profile checks can run even if search returns nothing."""
+    out = []
+    for u in urls:
+        p = urlparse(u)
+        note_id = p.path.rstrip("/").split("/")[-1]
+        token = parse_qs(p.query).get("xsec_token", [""])[0]
+        if note_id and token:
+            out.append({"id": note_id, "xsecToken": token, "modelType": "note", "noteCard": {}, "_from_url": True})
+        else:
+            print(f"  skip note url without id/xsec_token: {u[:80]}")
+    return out
+
+
+async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run, token: str = "",
+                         note_urls: list[str] | None = None):
     async with make_client(url, token) as c:
         tools = {t.name: t for t in await c.list_tools()}
         print(f"tools/list: {len(tools)} tools")
@@ -91,15 +111,27 @@ async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run, token: s
 
         search, txt = await r.call(c, "search_feeds", {"keyword": keyword}, "search")
         feeds = [f for f in (search or {}).get("feeds", []) if f.get("modelType", "note") == "note"]
-        r.mark(ITEMS[0], "PASS" if search is not None else "FAIL", txt if search is None else f"keyword={keyword}")
-        r.mark(ITEMS[1], "PASS" if feeds else "FAIL", f"{len(feeds)} notes")
+        n_raw = len((search or {}).get("feeds") or [])
+        if search is None:
+            r.mark(ITEMS[0], "FAIL", txt)
+        elif feeds:
+            r.mark(ITEMS[0], "PASS", f"keyword={keyword}")
+        else:
+            r.mark(ITEMS[0], "PARTIAL", f"call succeeded but 0 notes for keyword={keyword} ({n_raw} raw items before note filter)")
+        r.mark(ITEMS[1], "PASS" if feeds else "FAIL", f"{len(feeds)} notes ({n_raw} raw items)")
+        searched = bool(feeds)
         if not feeds:
-            return
+            feeds = feeds_from_note_urls(note_urls or [])
+            if not feeds:
+                print("  search returned 0 notes and no --note-url given; stopping")
+                return
+            print(f"  search returned 0 notes; continuing with {len(feeds)} --note-url note(s)")
         f0 = feeds[0]
         card = f0.get("noteCard", {})
-        r.mark(ITEMS[2], "PASS" if f0.get("id") else "FAIL", f0.get("id", ""))
-        r.mark(ITEMS[3], "PASS" if any(f.get("noteCard", {}).get("displayTitle") for f in feeds) else "FAIL",
-               card.get("displayTitle", ""))
+        if searched:
+            r.mark(ITEMS[2], "PASS" if f0.get("id") else "FAIL", f0.get("id", ""))
+            r.mark(ITEMS[3], "PASS" if any(f.get("noteCard", {}).get("displayTitle") for f in feeds) else "FAIL",
+                   card.get("displayTitle", ""))
 
         # detail for a few notes, preferring to include one video note
         videos = [f for f in feeds if f.get("noteCard", {}).get("type") == "video"]
@@ -114,6 +146,11 @@ async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run, token: s
             if d:
                 details.append(d)
         notes = [d.get("data", {}).get("note", {}) for d in details]
+        if not searched:  # ids/titles come from detail of user-supplied links, not from search
+            r.mark(ITEMS[2], "PASS" if notes and all(n.get("noteId") for n in notes) else "FAIL",
+                   f"from --note-url detail (not search): {notes[0].get('noteId', '') if notes else ''}")
+            r.mark(ITEMS[3], "PASS" if any(n.get("title") for n in notes) else "FAIL",
+                   f"from --note-url detail (not search): {notes[0].get('title', '') if notes else ''}")
         comments = [cm for d in details for cm in d.get("data", {}).get("comments", {}).get("list", [])]
 
         def check(item, getter, label):
@@ -141,7 +178,7 @@ async def test_xpzouying(url: str, keyword: str, n_detail: int, r: Run, token: s
         r.mark(ITEMS[15], "PASS" if any((cm.get("userInfo") or {}).get("nickname") for cm in comments) else "FAIL", "")
 
         # author profile + history notes
-        u = card.get("user", {})
+        u = card.get("user") or (notes[0].get("user") if notes else {}) or {}
         prof, txt = await r.call(c, "user_profile", {"user_id": u.get("userId", ""), "xsec_token": f0.get("xsecToken", "")}, "profile")
         r.mark(ITEMS[16], "PASS" if prof and (prof.get("userBasicInfo") or {}).get("nickname") else "FAIL",
                (prof or {}).get("userBasicInfo", {}).get("nickname", txt[:80]))
@@ -172,6 +209,9 @@ async def main():
     ap.add_argument("--token", default=os.environ.get("XHS_MCP_TOKEN", ""),
                     help="Bearer token = the AUTH_TOKEN the server was started with (or env XHS_MCP_TOKEN)")
     ap.add_argument("--keyword", required=True)
+    ap.add_argument("--note-url", action="append", default=[],
+                    help="note link copied from the browser (must contain xsec_token); "
+                         "used if search returns nothing. Repeatable.")
     ap.add_argument("--details", type=int, default=3, help="how many notes to open (keep small)")
     ap.add_argument("--pause", type=float, default=6.0, help="seconds between calls")
     ap.add_argument("--xhsdl-url", default="", help="XHS-Downloader MCP url, e.g. http://127.0.0.1:5556/mcp")
@@ -181,7 +221,7 @@ async def main():
     out.mkdir(parents=True, exist_ok=True)
     r = Run(out, a.pause)
     try:
-        await test_xpzouying(a.url, a.keyword, a.details, r, a.token)
+        await test_xpzouying(a.url, a.keyword, a.details, r, a.token, a.note_url)
     except Exception as e:  # report, don't hide
         print("xpzouying test aborted:", repr(e))
     for item in ITEMS:
