@@ -1,0 +1,542 @@
+<title>2027–2029 月度时间轴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* Layout: a sticky 36-cell rail (the whole timeline at a glance) above year sections;
+   each year is four quarter rows, each row a quarter label + three editable month cards. */
+:root {
+  --bg: #eceff3;
+  --surface: #ffffff;
+  --ink: #18212d;
+  --muted: #5a6575;
+  --line: #d3d9e1;
+  --accent: #2650b5;
+  --accent-soft: #e3e9f8;
+  --star: #b9790f;
+  --q1: #4c7fae; --q2: #4f8f5a; --q3: #c08a24; --q4: #b0573a;
+  --rail-0: #dde2e9; --rail-1: #b9c8ea; --rail-2: #7f9be0; --rail-3: #2650b5;
+  --display: "Bricolage Grotesque", "Noto Sans SC", system-ui, sans-serif;
+  --body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151b; --surface: #19202a; --ink: #e5e9ef; --muted: #98a3b3; --line: #2b3441;
+    --accent: #85a5ff; --accent-soft: #1f2a44; --star: #e2a944;
+    --q1: #78a8d6; --q2: #7dbb86; --q3: #ddb05a; --q4: #d98466;
+    --rail-0: #232b37; --rail-1: #2c3d66; --rail-2: #4566b8; --rail-3: #85a5ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151b; --surface: #19202a; --ink: #e5e9ef; --muted: #98a3b3; --line: #2b3441;
+  --accent: #85a5ff; --accent-soft: #1f2a44; --star: #e2a944;
+  --q1: #78a8d6; --q2: #7dbb86; --q3: #ddb05a; --q4: #d98466;
+  --rail-0: #232b37; --rail-1: #2c3d66; --rail-2: #4566b8; --rail-3: #85a5ff;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.55; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; }
+@media (max-width: 520px) { .wrap { padding-inline: 16px; } }
+
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 5vw, 46px); line-height: 1.05; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h1 .dash { color: var(--accent); }
+.lede { margin: 8px 0 0; color: var(--muted); max-width: 60ch; }
+.stats { display: flex; gap: 24px; font-variant-numeric: tabular-nums; }
+.stat b { display: block; font-family: var(--display); font-size: 26px; font-weight: 600; line-height: 1.1; }
+.stat span { color: var(--muted); font-size: 12px; }
+
+/* Rail */
+.rail-wrap { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-top: 24px; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); }
+.rail-scroll { overflow-x: auto; scrollbar-width: thin; }
+.rail { display: flex; gap: 10px; min-width: 760px; }
+.rail-year { flex: 1; min-width: 0; }
+.rail-year-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.rail-year-label button { all: unset; cursor: pointer; font-family: var(--display); font-weight: 600; color: var(--ink); font-size: 13px; }
+.rail-year-label button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+.rail-cells { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.cell { position: relative; height: 34px; border: 0; border-radius: 5px; background: var(--rail-0); color: var(--ink); font: 600 11px var(--display); cursor: pointer; padding: 0; font-variant-numeric: tabular-nums; }
+.cell[data-lvl="1"] { background: var(--rail-1); }
+.cell[data-lvl="2"] { background: var(--rail-2); color: #fff; }
+.cell[data-lvl="3"] { background: var(--rail-3); color: var(--surface); }
+.cell .bar { position: absolute; left: 3px; right: 3px; bottom: 3px; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--surface) 55%, transparent); overflow: hidden; }
+.cell .bar i { display: block; height: 100%; background: var(--q2); }
+.cell .pin { position: absolute; top: -3px; right: -2px; width: 9px; height: 9px; border-radius: 50%; background: var(--star); border: 2px solid var(--bg); }
+.cell.now { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rail-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font-size: 12px; color: var(--muted); align-items: center; }
+.rail-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+
+/* Toolbar */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.toolbar label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.toolbar input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; }
+.save-state { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+.save-state .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.save-state[data-s="saved"] .dot { background: var(--q2); }
+.save-state[data-s="saving"] .dot { background: var(--q3); }
+.save-state[data-s="error"] .dot { background: var(--q4); }
+
+/* Year sections */
+.year { margin-top: 40px; scroll-margin-top: 150px; }
+.year-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
+.year-head h2 { font-family: var(--display); font-weight: 800; font-size: 40px; line-height: 1; margin: 0; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.year-head .meta { color: var(--muted); font-size: 13px; }
+.quarter { display: grid; grid-template-columns: 72px repeat(3, minmax(0, 1fr)); gap: 12px; padding-block: 14px; border-bottom: 1px dashed var(--line); }
+.q-label { position: relative; padding-left: 12px; }
+.q-label::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 4px; border-radius: 2px; background: var(--qc); }
+.q-label b { display: block; font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.1; }
+.q-label span { display: block; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) {
+  .quarter { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .q-label { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 8px; }
+  .q-label span { display: inline; }
+  .q-label::before { top: 2px; bottom: 2px; }
+}
+@media (max-width: 640px) { .quarter { grid-template-columns: minmax(0, 1fr); } }
+
+/* Month card */
+.month { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; scroll-margin-top: 150px; transition: border-color .15s; }
+.month:focus-within { border-color: var(--accent); }
+.month.is-star { border-color: color-mix(in srgb, var(--star) 60%, var(--line)); box-shadow: inset 0 3px 0 var(--star); }
+.month.is-now { box-shadow: inset 0 3px 0 var(--ink); }
+.month.flash { animation: flash 1s ease-out; }
+@keyframes flash { from { background: var(--accent-soft); } to { background: var(--surface); } }
+.m-head { display: flex; align-items: flex-start; gap: 10px; }
+.m-num { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: .9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; min-width: 1.4ch; }
+.m-num small { font-family: var(--body); font-weight: 500; font-size: 14px; letter-spacing: 0; margin-left: 1px; }
+.m-meta { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); line-height: 1.4; padding-top: 2px; }
+.m-meta .tag-now { color: var(--surface); background: var(--ink); border-radius: 4px; padding: 0 5px; margin-left: 4px; font-weight: 500; }
+.icon-btn { flex: none; width: 30px; height: 30px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
+.icon-btn:hover { background: var(--accent-soft); color: var(--ink); }
+.icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.icon-btn[aria-pressed="true"] { color: var(--star); }
+.icon-btn svg { width: 18px; height: 18px; }
+.holidays { display: flex; flex-wrap: wrap; gap: 4px; }
+.holidays[hidden] { display: none; }
+.hol { font-size: 11.5px; padding: 1px 7px; border-radius: 999px; background: var(--bg); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.theme-input { width: 100%; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: var(--ink); font: 700 15px var(--body); padding: 4px 0 6px; outline: none; }
+.theme-input::placeholder { color: var(--muted); font-weight: 400; opacity: .75; }
+.theme-input:focus { border-bottom-color: var(--accent); }
+.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.task { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; }
+.task input[type="checkbox"] { flex: none; margin: 5px 0 0; width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+.task-text { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 400 14px/1.5 var(--body); padding: 1px 2px; border-radius: 4px; outline: none; resize: none; overflow: hidden; field-sizing: content; min-height: 1.5em; }
+.task-text:focus { background: var(--accent-soft); }
+.task.done .task-text { color: var(--muted); text-decoration: line-through; }
+.del { flex: none; opacity: 0; width: 22px; height: 22px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; }
+.task:hover .del, .task:focus-within .del { opacity: 1; }
+.del:hover { background: var(--accent-soft); color: var(--q4); }
+.del:focus-visible { opacity: 1; outline: 2px solid var(--accent); }
+@media (hover: none) { .del { opacity: .55; } }
+.add-row { display: flex; align-items: center; gap: 8px; padding-top: 2px; }
+.add-row .plus { width: 15px; text-align: center; color: var(--accent); font-weight: 700; }
+.add-input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: 400 14px var(--body); padding: 3px 2px; border-radius: 4px; outline: none; }
+.add-input::placeholder { color: var(--muted); opacity: .8; }
+.add-input:focus { background: var(--accent-soft); }
+.m-foot { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 16px; }
+.month.empty .m-foot .count { visibility: hidden; }
+body.readonly .add-row, body.readonly .del { display: none; }
+body.filter-filled .month.empty { display: none; }
+body.filter-filled .quarter.all-empty { display: none; }
+
+.hint { margin-top: 36px; color: var(--muted); font-size: 12.5px; max-width: 70ch; }
+.hint kbd { font: 500 11.5px var(--body); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; background: var(--surface); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>2027<span class="dash">→</span>2029 月度时间轴</h1>
+      <p class="lede" id="lede">36 个月，每月一张卡片。点任意月份直接写下本月重点和待办事项，内容会自动保存。</p>
+    </div>
+    <div class="stats" aria-live="polite">
+      <div class="stat"><b id="st-filled">0</b><span>已规划月份 / 36</span></div>
+      <div class="stat"><b id="st-tasks">0</b><span>事项总数</span></div>
+      <div class="stat"><b id="st-done">0%</b><span>完成率</span></div>
+    </div>
+  </header>
+
+  <div class="rail-wrap">
+    <div class="rail-scroll"><nav class="rail" id="rail" aria-label="月份总览"></nav></div>
+    <div class="rail-legend">
+      <span><i class="sw" style="background:var(--rail-0)"></i>未填写</span>
+      <span><i class="sw" style="background:var(--rail-1)"></i>1–2 项</span>
+      <span><i class="sw" style="background:var(--rail-2)"></i>3–5 项</span>
+      <span><i class="sw" style="background:var(--rail-3)"></i>6 项以上</span>
+      <span><i class="sw" style="background:var(--star);border-radius:50%"></i>里程碑</span>
+      <span>底部细条 = 完成进度</span>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <label><input type="checkbox" id="opt-holidays" checked> 显示节假日</label>
+    <label><input type="checkbox" id="opt-filled"> 只看已填写的月份</label>
+    <span class="save-state" id="save-state" data-s="idle" role="status"><i class="dot"></i><span id="save-text">正在连接存储…</span></span>
+  </div>
+
+  <main id="years"></main>
+
+  <p class="hint">编辑提示：在事项里按 <kbd>Enter</kbd> 新起一行，在空事项里按 <kbd>Backspace</kbd> 删除它；点卡片右上角的星标把这个月设为里程碑。节假日为法定节日的公历日期，供排期参考。</p>
+</div>
+
+<script>
+(() => {
+  const YEARS = [2027, 2028, 2029];
+  const CN_NUM = ["一", "二", "三", "四"];
+  const WEEK = ["日", "一", "二", "三", "四", "五", "六"];
+  const SEASON = ["冬末春初", "春夏", "盛夏入秋", "秋冬"];
+  // Public holidays (Gregorian dates) that shape scheduling in mainland China.
+  const HOLIDAYS = {
+    "2027-01": ["元旦 1/1"], "2027-02": ["春节 2/6"], "2027-04": ["清明 4/5"], "2027-05": ["劳动节 5/1"],
+    "2027-06": ["端午 6/9"], "2027-09": ["中秋 9/15"], "2027-10": ["国庆 10/1"],
+    "2028-01": ["元旦 1/1", "春节 1/26"], "2028-04": ["清明 4/4"], "2028-05": ["劳动节 5/1", "端午 5/28"],
+    "2028-10": ["国庆 10/1", "中秋 10/3"],
+    "2029-01": ["元旦 1/1"], "2029-02": ["春节 2/13"], "2029-04": ["清明 4/4"], "2029-05": ["劳动节 5/1"],
+    "2029-06": ["端午 6/16"], "2029-09": ["中秋 9/22"], "2029-10": ["国庆 10/1"],
+  };
+  const pad = n => String(n).padStart(2, "0");
+  const KEYS = [];
+  YEARS.forEach(y => { for (let m = 1; m <= 12; m++) KEYS.push(`${y}-${pad(m)}`); });
+
+  const empty = () => ({ theme: "", milestone: false, tasks: [] });
+  const state = Object.fromEntries(KEYS.map(k => [k, empty()]));
+  const isEmpty = s => !s.theme.trim() && !s.milestone && s.tasks.every(t => !t.text.trim());
+  const uid = () => Math.random().toString(36).slice(2, 9);
+  const normalize = d => ({
+    theme: typeof d?.theme === "string" ? d.theme : "",
+    milestone: !!d?.milestone,
+    tasks: Array.isArray(d?.tasks) ? d.tasks.filter(t => t && typeof t.text === "string")
+      .map(t => ({ id: typeof t.id === "string" && /^[\w-]{1,40}$/.test(t.id) ? t.id : uid(), text: t.text, done: !!t.done })) : [],
+  });
+
+  const now = new Date();
+  const nowKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+  // ---------- Prefs (per viewer) ----------
+  const pref = {
+    get(k, d) { try { const v = localStorage.getItem("tl-pref-" + k); return v === null ? d : v === "1"; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("tl-pref-" + k, v ? "1" : "0"); } catch {} },
+  };
+
+  // ---------- Build DOM ----------
+  const $ = (sel, el = document) => el.querySelector(sel);
+  const h = (tag, attrs = {}, ...kids) => {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === "class") el.className = v; else if (k === "text") el.textContent = v;
+      else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
+    }
+    kids.flat().forEach(c => c != null && el.append(c));
+    return el;
+  };
+  const STAR = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z"/></svg>';
+  const STAR_O = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z"/></svg>';
+
+  const rail = $("#rail"), years = $("#years");
+  const cells = {}, cards = {};
+
+  YEARS.forEach(y => {
+    // rail
+    const rc = h("div", { class: "rail-cells" });
+    const ry = h("div", { class: "rail-year" },
+      h("div", { class: "rail-year-label" }, h("button", { type: "button", text: `${y} 年`, "data-jump": `y${y}` }), h("span", { id: `rail-sum-${y}` })),
+      rc);
+    rail.append(ry);
+    // section
+    const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+    const sec = h("section", { class: "year", id: `y${y}`, "aria-labelledby": `yh${y}` },
+      h("div", { class: "year-head" }, h("h2", { id: `yh${y}`, text: String(y) }),
+        h("span", { class: "meta", text: `${leap ? 366 : 365} 天${leap ? " · 闰年，2 月有 29 天" : ""}` })));
+    for (let q = 0; q < 4; q++) {
+      const row = h("div", { class: "quarter", id: `q-${y}-${q + 1}`, style: `--qc: var(--q${q + 1})` },
+        h("div", { class: "q-label" }, h("b", { text: `Q${q + 1}` }), h("span", { text: `第${CN_NUM[q]}季度` }), h("span", { text: `${q * 3 + 1}–${q * 3 + 3} 月` })));
+      for (let i = 1; i <= 3; i++) {
+        const m = q * 3 + i, key = `${y}-${pad(m)}`;
+        // rail cell
+        const cell = h("button", { class: "cell", type: "button", "data-jump": `m-${key}`, title: `${y} 年 ${m} 月` }, String(m));
+        if (key === nowKey) cell.classList.add("now");
+        cells[key] = cell; rc.append(cell);
+        // card
+        const days = new Date(y, m, 0).getDate();
+        const wd = WEEK[new Date(y, m - 1, 1).getDay()];
+        const hol = HOLIDAYS[key] || [];
+        const card = h("article", { class: "month empty", id: `m-${key}`, "aria-label": `${y} 年 ${m} 月` });
+        const starBtn = h("button", { class: "icon-btn star", type: "button", "aria-pressed": "false", "aria-label": `把 ${y} 年 ${m} 月设为里程碑`, title: "设为里程碑" });
+        starBtn.innerHTML = STAR_O;
+        card.append(...[
+          h("div", { class: "m-head" },
+            h("div", { class: "m-num" }, String(m), h("small", { text: "月" })),
+            h("div", { class: "m-meta" }, `${y} 年 · ${days} 天`, key === nowKey ? h("span", { class: "tag-now", text: "本月" }) : null, h("br"), `1 日周${wd}`),
+            starBtn),
+          hol.length ? h("div", { class: "holidays" }, hol.map(t => h("span", { class: "hol", text: t }))) : null,
+          h("input", { class: "theme-input", id: `theme-${key}`, type: "text", maxlength: "80", placeholder: "本月重点（可选）", "aria-label": `${y} 年 ${m} 月的重点`, autocomplete: "off" }),
+          h("ul", { class: "tasks", "aria-label": `${y} 年 ${m} 月事项` }),
+          h("div", { class: "add-row" }, h("span", { class: "plus", "aria-hidden": "true", text: "+" }),
+            h("input", { class: "add-input", id: `add-${key}`, type: "text", maxlength: "200", placeholder: "添加事项，回车确认", "aria-label": `为 ${y} 年 ${m} 月添加事项`, autocomplete: "off" })),
+          h("div", { class: "m-foot" }, h("span", { class: "count" }), h("span", { class: "season", text: m === 1 || m === 4 || m === 7 || m === 10 ? `${SEASON[q]}` : "" }))].filter(Boolean));
+        if (key === nowKey) card.classList.add("is-now");
+        card.dataset.key = key;
+        cards[key] = card; row.append(card);
+      }
+      sec.append(row);
+    }
+    years.append(sec);
+  });
+
+  // ---------- Render ----------
+  function renderTasks(key) {
+    const ul = $(".tasks", cards[key]);
+    ul.replaceChildren(...state[key].tasks.map(t => {
+      const li = h("li", { class: "task" + (t.done ? " done" : ""), "data-id": t.id });
+      const cb = h("input", { type: "checkbox", id: `cb-${key}-${t.id}`, "aria-label": "完成" });
+      cb.checked = t.done;
+      const ta = h("textarea", { class: "task-text", id: `tx-${key}-${t.id}`, rows: "1", maxlength: "200", "aria-label": "事项内容" });
+      ta.value = t.text;
+      li.append(cb, ta, h("button", { class: "del", type: "button", "aria-label": "删除这条事项", text: "×" }));
+      return li;
+    }));
+    ul.querySelectorAll(".task-text").forEach(autosize);
+  }
+  function renderCard(key) {
+    const s = state[key], card = cards[key];
+    $(".theme-input", card).value = s.theme;
+    const star = $(".star", card);
+    star.setAttribute("aria-pressed", String(s.milestone));
+    star.innerHTML = s.milestone ? STAR : STAR_O;
+    card.classList.toggle("is-star", s.milestone);
+    renderTasks(key);
+    renderMeta(key);
+  }
+  function renderMeta(key) {
+    const s = state[key], card = cards[key];
+    const total = s.tasks.filter(t => t.text.trim()).length;
+    const done = s.tasks.filter(t => t.text.trim() && t.done).length;
+    card.classList.toggle("empty", isEmpty(s));
+    $(".count", card).textContent = total ? `${done}/${total} 已完成` : (s.theme.trim() || s.milestone ? "还没有事项" : "");
+    const cell = cells[key];
+    cell.dataset.lvl = total === 0 ? (isEmpty(s) ? "0" : "1") : total <= 2 ? "1" : total <= 5 ? "2" : "3";
+    cell.replaceChildren(key.slice(5).replace(/^0/, ""));
+    if (total) { const bar = h("span", { class: "bar" }, h("i", { style: `width:${Math.round(done / total * 100)}%` })); cell.append(bar); }
+    if (s.milestone) cell.append(h("span", { class: "pin" }));
+    cell.title = `${key.slice(0, 4)} 年 ${+key.slice(5)} 月${s.theme ? "：" + s.theme : ""}${total ? `（${done}/${total}）` : ""}`;
+    scheduleSummary();
+  }
+  let sumRaf = 0;
+  function scheduleSummary() { if (!sumRaf) sumRaf = requestAnimationFrame(() => { sumRaf = 0; renderSummary(); }); }
+  function renderSummary() {
+    let filled = 0, total = 0, done = 0;
+    YEARS.forEach(y => {
+      let yt = 0, yd = 0;
+      KEYS.filter(k => k.startsWith(y)).forEach(k => {
+        const s = state[k];
+        if (!isEmpty(s)) filled++;
+        s.tasks.forEach(t => { if (t.text.trim()) { yt++; if (t.done) yd++; } });
+      });
+      $(`#rail-sum-${y}`).textContent = yt ? `${yd}/${yt}` : "";
+      total += yt; done += yd;
+    });
+    $("#st-filled").textContent = filled;
+    $("#st-tasks").textContent = total;
+    $("#st-done").textContent = total ? Math.round(done / total * 100) + "%" : "—";
+    document.querySelectorAll(".quarter").forEach(q => q.classList.toggle("all-empty", !q.querySelector(".month:not(.empty)")));
+  }
+  function autosize(ta) { if (CSS.supports("field-sizing", "content")) return; ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; }
+
+  // Countdown / position line in the lede
+  (() => {
+    const diff = (2027 - now.getFullYear()) * 12 + (1 - (now.getMonth() + 1));
+    let extra = "";
+    if (diff > 0) extra = `距 2027 年 1 月还有 ${diff} 个月。`;
+    else if (state[nowKey]) extra = `现在是第 ${KEYS.indexOf(nowKey) + 1} 个月。`;
+    if (extra) $("#lede").textContent += " " + extra;
+  })();
+
+  // ---------- Storage ----------
+  let mode = "pending";           // pending | db | local | readonly
+  let db = null;
+  const dirty = new Set(), inflight = new Set(), requeue = new Set(), timers = {}, stash = {};
+  const LS = "tl-data-v1";
+
+  function setStatus(s, text) { const el = $("#save-state"); el.dataset.s = s; $("#save-text").textContent = text; }
+  function refreshStatus() {
+    if (mode === "readonly") return setStatus("idle", "只读：你可以查看，但不能修改");
+    if (mode === "pending") return setStatus("idle", "正在连接存储…");
+    if (dirty.size || inflight.size) return setStatus("saving", "保存中…");
+    setStatus("saved", mode === "db" ? "已保存" : "已保存在本浏览器");
+  }
+  function touch(key) {
+    if (mode === "readonly") return;
+    dirty.add(key);
+    clearTimeout(timers[key]);
+    timers[key] = setTimeout(() => { delete timers[key]; flush(key); }, 700);
+    refreshStatus();
+  }
+  function serialize(s) {
+    return { theme: s.theme.trim(), milestone: s.milestone, tasks: s.tasks.filter(t => t.text.trim()).map(t => ({ id: t.id, text: t.text.trim(), done: t.done })), updatedAt: new Date().toISOString() };
+  }
+  function saveLocal() {
+    try { const out = {}; KEYS.forEach(k => { if (!isEmpty(state[k])) out[k] = serialize(state[k]); }); localStorage.setItem(LS, JSON.stringify(out)); return true; } catch { return false; }
+  }
+  async function flush(key) {
+    if (mode === "pending" || mode === "readonly") return;
+    if (mode === "local") { dirty.delete(key); if (!saveLocal()) setStatus("error", "本浏览器无法保存（可能是隐私模式）"); else refreshStatus(); return; }
+    if (inflight.has(key)) { requeue.add(key); return; }
+    inflight.add(key); dirty.delete(key); refreshStatus();
+    const ref = db.doc("months/" + key);
+    const write = () => isEmpty(state[key]) ? ref.delete() : ref.set(serialize(state[key]));
+    try {
+      try { await write(); }
+      catch (e) { if (e?.code === "unavailable") { await new Promise(r => setTimeout(r, 600 + Math.random() * 800)); await write(); } else throw e; }
+      inflight.delete(key);
+      if (requeue.delete(key)) return flush(key);
+      refreshStatus();
+    } catch (e) {
+      inflight.delete(key); requeue.delete(key);
+      if (e?.code === "invalid_argument") { goReadonly(); return; }
+      dirty.add(key);
+      setStatus("error", e?.code === "quota_exceeded" ? "存储已满，删除一些内容后再试" : "保存失败，稍后修改任意内容会重试");
+    }
+  }
+  function goReadonly() {
+    mode = "readonly";
+    document.body.classList.add("readonly");
+    document.querySelectorAll(".month input, .month textarea, .month .star").forEach(el => { el.disabled = true; });
+    refreshStatus();
+  }
+  function isBusy(key) { return dirty.has(key) || inflight.has(key) || key in timers || cards[key].contains(document.activeElement); }
+  function applyRemote(key, data) {
+    if (isBusy(key)) { stash[key] = data; return; }
+    delete stash[key];
+    state[key] = data ? normalize(data) : empty();
+    renderCard(key);
+  }
+
+  async function initStorage() {
+    const c = window.claude;
+    const [dbNs, user] = c?.use ? await Promise.all([c.use("db").catch(() => null), c.use("user").catch(() => null)]) : [null, null];
+    if (dbNs) {
+      db = dbNs; mode = "db";
+      let canWrite = null;
+      try { canWrite = user ? await user.can("data.write") : null; } catch {}
+      if (canWrite === false) goReadonly();
+      db.collection("months").onSnapshot(snap => {
+        snap.docChanges().forEach(ch => { if (state[ch.doc.id]) applyRemote(ch.doc.id, ch.type === "removed" ? null : ch.doc.data()); });
+      }, () => setStatus("error", "与存储的连接已断开，刷新页面重试"));
+      [...dirty].forEach(k => flush(k));
+    } else {
+      mode = "local";
+      try {
+        const raw = JSON.parse(localStorage.getItem(LS) || "{}");
+        KEYS.forEach(k => { if (raw[k] && !dirty.has(k)) { state[k] = normalize(raw[k]); renderCard(k); } });
+      } catch {}
+      [...dirty].forEach(k => flush(k));
+    }
+    refreshStatus();
+  }
+
+  // ---------- Interactions ----------
+  const keyOf = el => el.closest(".month")?.dataset.key;
+  const taskOf = (key, el) => { const id = el.closest(".task")?.dataset.id; return state[key].tasks.find(t => t.id === id); };
+  function focusTask(key, id, atEnd = true) {
+    const ta = document.getElementById(`tx-${key}-${id}`); if (!ta) return;
+    ta.focus(); if (atEnd) ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+
+  years.addEventListener("input", e => {
+    const key = keyOf(e.target); if (!key || mode === "readonly") return;
+    const t = e.target;
+    if (t.classList.contains("theme-input")) { state[key].theme = t.value; renderMeta(key); touch(key); }
+    else if (t.classList.contains("task-text")) {
+      const task = taskOf(key, t); if (!task) return;
+      if (t.value.includes("\n")) t.value = t.value.replace(/\n/g, " ");
+      task.text = t.value; autosize(t); renderMeta(key); touch(key);
+    }
+  });
+  years.addEventListener("change", e => {
+    const key = keyOf(e.target); if (!key || e.target.type !== "checkbox") return;
+    const task = taskOf(key, e.target); if (!task) return;
+    task.done = e.target.checked;
+    e.target.closest(".task").classList.toggle("done", task.done);
+    renderMeta(key); touch(key);
+  });
+  years.addEventListener("click", e => {
+    const key = keyOf(e.target); if (!key || mode === "readonly") return;
+    const del = e.target.closest(".del"), star = e.target.closest(".star");
+    if (del) {
+      const task = taskOf(key, del), list = state[key].tasks, i = list.indexOf(task);
+      list.splice(i, 1); renderTasks(key); renderMeta(key); touch(key);
+      const next = list[i] || list[i - 1];
+      next ? focusTask(key, next.id) : document.getElementById(`add-${key}`).focus();
+    } else if (star) {
+      state[key].milestone = !state[key].milestone;
+      star.setAttribute("aria-pressed", String(state[key].milestone));
+      star.innerHTML = state[key].milestone ? STAR : STAR_O;
+      cards[key].classList.toggle("is-star", state[key].milestone);
+      renderMeta(key); touch(key);
+    }
+  });
+  years.addEventListener("keydown", e => {
+    const key = keyOf(e.target); if (!key || mode === "readonly" || e.isComposing) return;
+    const t = e.target, list = state[key].tasks;
+    if (t.classList.contains("add-input") && e.key === "Enter") {
+      e.preventDefault();
+      const text = t.value.trim(); if (!text) return;
+      list.push({ id: uid(), text, done: false }); t.value = "";
+      renderTasks(key); renderMeta(key); touch(key);
+    } else if (t.classList.contains("task-text")) {
+      const task = taskOf(key, t), i = list.indexOf(task);
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const nt = { id: uid(), text: "", done: false };
+        list.splice(i + 1, 0, nt); renderTasks(key); focusTask(key, nt.id);
+      } else if (e.key === "Backspace" && t.value === "") {
+        e.preventDefault();
+        list.splice(i, 1); renderTasks(key); renderMeta(key); touch(key);
+        const prev = list[i - 1] || list[i];
+        prev ? focusTask(key, prev.id) : document.getElementById(`add-${key}`).focus();
+      }
+    } else if (t.classList.contains("theme-input") && e.key === "Enter") {
+      e.preventDefault(); document.getElementById(`add-${key}`).focus();
+    }
+  });
+  // Drop blank rows and apply any remote change held back while this card had focus.
+  years.addEventListener("focusout", e => {
+    const key = keyOf(e.target); if (!key) return;
+    setTimeout(() => {
+      if (cards[key].contains(document.activeElement)) return;
+      const before = state[key].tasks.length;
+      state[key].tasks = state[key].tasks.filter(t => t.text.trim());
+      if (state[key].tasks.length !== before) { renderTasks(key); renderMeta(key); }
+      if (key in stash && !isBusy(key)) applyRemote(key, stash[key]);
+    }, 0);
+  });
+
+  // Rail + year jumps
+  document.addEventListener("click", e => {
+    const j = e.target.closest("[data-jump]"); if (!j) return;
+    const el = document.getElementById(j.dataset.jump); if (!el) return;
+    if (el.offsetParent === null) { $("#opt-filled").checked = false; applyFilter(); }
+    el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    if (el.classList.contains("month")) { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+  });
+
+  // Toolbar options
+  const optHol = $("#opt-holidays"), optFilled = $("#opt-filled");
+  function applyHolidays() { document.querySelectorAll(".holidays").forEach(el => { el.hidden = !optHol.checked; }); }
+  function applyFilter() { document.body.classList.toggle("filter-filled", optFilled.checked); }
+  optHol.checked = pref.get("hol", true); optFilled.checked = pref.get("filled", false);
+  optHol.addEventListener("change", () => { pref.set("hol", optHol.checked); applyHolidays(); });
+  optFilled.addEventListener("change", () => { pref.set("filled", optFilled.checked); applyFilter(); });
+  applyHolidays(); applyFilter();
+
+  KEYS.forEach(renderMeta);
+  renderSummary();
+  initStorage();
+})();
+</script>
