@@ -417,6 +417,9 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
 .vt .vis-item.vis-point.ms-item .vis-item-content { font-weight: 700; }
 .vt .vis-item.vis-selected { border-color: var(--ink); outline: 2px solid var(--ink); outline-offset: 0; z-index: 2; }
 .vt .vis-item.vis-range .vis-drag-left, .vt .vis-item.vis-range .vis-drag-right { width: 10px; }
+/* three tiers: year (top row) · quarter (heavier line, bold label at 1/4/7/10月) · month */
+.vt .vis-time-axis .vis-grid.vis-minor.vis-april, .vt .vis-time-axis .vis-grid.vis-minor.vis-july, .vt .vis-time-axis .vis-grid.vis-minor.vis-october { border-color: color-mix(in srgb, var(--slate) 70%, var(--line)); }
+.vt .vis-time-axis .vis-text.vis-minor.vis-january, .vt .vis-time-axis .vis-text.vis-minor.vis-april, .vt .vis-time-axis .vis-text.vis-minor.vis-july, .vt .vis-time-axis .vis-text.vis-minor.vis-october { color: var(--ink); font-weight: 600; }
 .vt .vis-item.vis-background.yr-bg { background: transparent; border: 0; }
 .vt .vis-item.vis-background.yr-alt { background: color-mix(in srgb, var(--fill) 55%, transparent); }
 .vt .vis-time-axis .vis-grid.vis-major { border-width: 2px; }
@@ -1791,15 +1794,22 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   const vid = (y, id) => `${y}:${id}`;
   const splitVid = v => { const i = String(v).indexOf(":"); return [+String(v).slice(0, i), String(v).slice(i + 1)]; };
   const clampMonth = (d, y) => d.getFullYear() < y ? 1 : d.getFullYear() > y ? 12 : d.getMonth() + 1;
+  // Zooming out stops where a month column would get narrower than its label (~40px).
+  // a year's view ends half a day before next January, so the axis closes on 12月 (not next year's 1月 label)
+  const yearEnd = y => new Date(new Date(y + 1, 0, 1).getTime() - 12 * 3600e3);
+  const zoomMaxFor = () => Math.min(740, Math.max(124, Math.floor((vtBox.clientWidth || 1000) / 40) * 30.5)) * 864e5;
   function ensureVis() {
     if (vt) return;
+    window.addEventListener("resize", () => vt?.setOptions({ zoomMax: zoomMaxFor() }));
     vtItems = new vis.DataSet(); vtGroups = new vis.DataSet();
     vt = new vis.Timeline(vtBox, vtItems, vtGroups, {
       orientation: "top", stack: true, minHeight: 240, groupOrder: "order",
       // an explicit start/end stops vis from auto-fitting the view to every year's data on first load
-      start: new Date(ySel, 0, 1), end: new Date(ySel + 1, 0, 1),
+      start: new Date(ySel, 0, 1), end: yearEnd(ySel),
       margin: { item: { horizontal: 4, vertical: 8 }, axis: 10 },
-      zoomMin: 1000 * 60 * 60 * 24 * 40, zoomMax: 1000 * 60 * 60 * 24 * 740,
+      // every month gets its own label (1月 … 12月); vis would otherwise thin them to every third month
+      timeAxis: { scale: "month", step: 1 },
+      zoomMin: 1000 * 60 * 60 * 24 * 40, zoomMax: zoomMaxFor(),
       zoomKey: "ctrlKey", horizontalScroll: false, showCurrentTime: true,
       editable: { add: store.mode !== "readonly", updateTime: store.mode !== "readonly", updateGroup: store.mode !== "readonly", remove: false },
       snap: date => monthStart(date),
@@ -1883,14 +1893,14 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     }));
     vtGroups.clear(); vtGroups.add(groups);
     vtItems.clear(); vtItems.add(items);
-    vt.setOptions({ min: new Date(yrRange.from, 0, 1), max: new Date(yrRange.to + 1, 0, 1) });
+    vt.setOptions({ min: new Date(yrRange.from, 0, 1), max: new Date(yrRange.to + 1, 0, 1), zoomMax: zoomMaxFor() });
     if (vtYear !== y) {
       // a chosen year (chip, ‹ › buttons, first open) brings that whole year into view; narrow screens show four months
       const narrow = (vtBox.clientWidth || ydEl.clientWidth) < 640;
       const evs = yrState[y]?.events || [], ms = milestonesOf(y);
       const first = Math.min(9, ...evs.filter(e => e.month && e.text.trim()).map(e => e.month), ...ms.map(m => m.month), 12) - 1;
       const a = narrow ? new Date(y, Math.max(0, first), 1) : new Date(y, 0, 1);
-      vt.setWindow(a, narrow ? new Date(y, Math.max(0, first) + 4, 1) : new Date(y + 1, 0, 1), { animation: vtYear !== null });
+      vt.setWindow(a, narrow ? new Date(y, Math.max(0, first) + 4, 1) : yearEnd(y), { animation: false });   // an animated jump gets cut short by the redraw that follows
       vtYear = y;
     }
     if (vtSel && vtItems.get(vtSel)) vt.setSelection([vtSel]); else vtSel = null;
@@ -1972,7 +1982,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     return h("div", { class: "yd-scroll" }, grid);
   }
 
-  function selectYear(y) { ySel = y; pref.set("ysel", y); renderYears(); }
+  function selectYear(y) { if (vtYear !== null) vtYear = NaN; ySel = y; pref.set("ysel", y); renderYears(); }
   ypickEl.addEventListener("click", e => {
     const chip = e.target.closest("[data-y]");
     if (chip) return selectYear(+chip.dataset.y);
