@@ -268,35 +268,49 @@ body.picking .slot:hover { box-shadow: inset 0 0 0 2px var(--accent); }
 .pick-banner { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--ink); color: var(--surface); border-radius: 999px; padding: 8px 10px 8px 16px; display: flex; align-items: center; gap: 12px; font-size: 13px; max-width: calc(100% - 32px); }
 .pick-banner button { border: 0; border-radius: 999px; padding: 4px 12px; background: var(--surface); color: var(--ink); cursor: pointer; font-size: 12.5px; }
 
-/* ---------- Year view ---------- */
-.yt-scroll { overflow-x: auto; margin-top: 22px; padding-bottom: 6px; }
-.yt { position: relative; display: flex; min-width: max-content; }
-.yt::before { content: ""; position: absolute; left: 0; right: 0; top: 62px; height: 4px; background: var(--ink); border-radius: 2px; }
-.ycol { position: relative; width: 236px; flex: none; padding: 0 14px 0 0; }
-.ycol .yh { display: flex; align-items: baseline; gap: 8px; height: 50px; }
-.ycol .yh b { font-family: var(--display); font-weight: 800; font-size: 34px; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
-.ycol .yh span { font-size: 12px; color: var(--muted); }
-.ycol .ynode { position: relative; z-index: 1; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 3px solid var(--ink); margin-top: 6px; }
-.ycol.now .ynode { background: var(--accent); border-color: var(--accent); }
-.ycol .ybody { margin-top: 14px; border-left: 1px solid var(--line); margin-left: 7px; padding-left: 12px; display: flex; flex-direction: column; gap: 6px; min-height: 120px; }
-.ms { display: flex; gap: 6px; align-items: flex-start; font-size: 13px; border: 0; background: color-mix(in srgb, var(--star) 14%, var(--surface)); color: var(--ink); text-align: left; border-radius: 6px; padding: 4px 7px; cursor: pointer; width: 100%; }
+/* ---------- Year view: year picker + one year as a Jan–Dec timeline ---------- */
+.ypick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
+.ychip { display: flex; flex-direction: column; align-items: flex-start; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 6px 12px 5px; cursor: pointer; min-width: 74px; text-align: left; }
+.ychip b { font-family: var(--display); font-weight: 700; font-size: 17px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.ychip span { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.ychip:hover { border-color: var(--accent); }
+.ychip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ychip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.ychip[aria-pressed="true"] span { color: color-mix(in srgb, var(--surface) 72%, transparent); }
+.ychip.add { align-items: center; justify-content: center; border-style: dashed; color: var(--muted); font-size: 13px; }
+.yd-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 18px; margin-top: 26px; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
+.yd-head h3 { font-family: var(--display); font-weight: 800; font-size: clamp(40px, 7vw, 60px); line-height: .92; margin: 0; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.yd-head .meta { color: var(--muted); font-size: 13px; padding-bottom: 6px; }
+.yd-head .nav { margin-left: auto; display: flex; gap: 6px; padding-bottom: 4px; }
+.yall { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 14px; }
+.yall .lbl { font-weight: 700; font-size: 13px; margin-right: 2px; }
+.yall .add-input { flex: 0 1 230px; font-size: 13px; }
+.chip-ev { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 3px 11px; font-size: 13px; cursor: pointer; max-width: 100%; text-align: left; overflow-wrap: anywhere; }
+.chip-ev:hover { border-color: var(--accent); }
+.yd-scroll { overflow-x: auto; margin-top: 14px; padding-bottom: 8px; }
+.yd { display: grid; grid-template-columns: repeat(12, minmax(96px, 1fr)); min-width: 1152px; }
+.yd-mh { padding: 8px 8px 6px; border-top: 3px solid var(--qc); display: flex; align-items: baseline; gap: 6px; }
+.yd-mh b { font-family: var(--display); font-weight: 800; font-size: 26px; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.yd-mh b small { font-family: var(--body); font-weight: 500; font-size: 12px; letter-spacing: 0; }
+.yd-mh span { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.yd-mh.now b { color: var(--accent); }
+.yd-line { grid-column: 1 / -1; position: relative; display: grid; grid-template-columns: repeat(12, 1fr); height: 22px; }
+.yd-line::before { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 2px; background: var(--ink); }
+.yd-line i { position: relative; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 3px solid var(--ink); margin: 4px 0 0 2px; }
+.yd-line i.has { background: var(--ink); }
+.yd-line i.now { background: var(--accent); border-color: var(--accent); }
+.yd-span { margin: 6px 5px 0; border: 0; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 15%, var(--surface)); color: var(--ink); border-radius: 6px; padding: 5px 9px; font-size: 13px; text-align: left; cursor: pointer; min-width: 0; overflow-wrap: anywhere; }
+.yd-span em { font-style: normal; color: var(--muted); font-size: 11.5px; margin-right: 6px; font-variant-numeric: tabular-nums; }
+.yd-span:hover { background: color-mix(in srgb, var(--accent) 24%, var(--surface)); }
+.yd-col { border-left: 1px solid var(--line); margin-top: 8px; padding: 4px 5px 6px; display: flex; flex-direction: column; gap: 4px; min-height: 170px; min-width: 0; }
+.yd-ev { display: flex; gap: 6px; align-items: flex-start; border: 0; background: transparent; color: var(--ink); text-align: left; font-size: 13px; line-height: 1.4; padding: 3px 4px; border-radius: 5px; cursor: pointer; overflow-wrap: anywhere; }
+.yd-ev::before { content: ""; flex: none; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); margin-top: 7px; }
+.yd-ev:hover, .chip-ev:focus-visible, .yd-ev:focus-visible, .yd-span:focus-visible { background: var(--accent-soft); outline: none; }
+.yd-col .add-input { flex: none; font-size: 12.5px; padding: 3px 4px; }
+.ms { display: flex; gap: 5px; align-items: flex-start; font-size: 12.5px; border: 0; background: color-mix(in srgb, var(--star) 14%, var(--surface)); color: var(--ink); text-align: left; border-radius: 6px; padding: 4px 6px; cursor: pointer; width: 100%; overflow-wrap: anywhere; }
 .ms:focus-visible { outline: 2px solid var(--accent); }
-.ms svg { flex: none; width: 13px; height: 13px; color: var(--star); margin-top: 3px; }
-.ms em { font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
-.ye { display: flex; align-items: flex-start; gap: 4px; }
-.ye select { flex: none; border: 0; background: var(--bg); color: var(--muted); border-radius: 5px; font: 12px var(--body); padding: 2px 2px; margin-top: 1px; }
-.ye-text { font-size: 13.5px; }
-.y-ext { display: flex; flex-direction: column; justify-content: flex-start; gap: 8px; padding: 6px 14px 0 0; flex: none; }
-@media (max-width: 640px) {
-  .yt-scroll { overflow: visible; }
-  .yt { flex-direction: column; min-width: 0; }
-  .yt::before { top: 0; bottom: 0; left: 7px; right: auto; width: 3px; height: auto; }
-  .ycol { width: auto; padding: 0 0 18px 26px; }
-  .ycol .ynode { position: absolute; left: 0; top: 10px; margin: 0; }
-  .ycol .yh { height: auto; }
-  .ycol .ybody { margin: 8px 0 0; border: 0; padding: 0; min-height: 0; }
-  .y-ext { flex-direction: row; padding: 0 0 0 26px; }
-}
+.ms svg { flex: none; width: 13px; height: 13px; color: var(--star); margin-top: 2px; }
+.modal select { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 7px; padding: 6px 8px; font: 14px var(--body); }
 
 body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.readonly .ro-hide { display: none !important; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
@@ -377,7 +391,13 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
         <div class="card gcal-box ro-hide">
           <h3>Google 日历</h3>
           <div class="body">
-            <p>选择从 Google 日历导出的 <b>.zip</b> 或 <b>.ics</b> 文件，日程会按时间放进表格。重复导入只更新日历来的日程，你标的状态会保留。</p>
+            <div class="row">
+              <button class="btn primary" type="button" id="gc-sync">同步本周</button>
+              <label style="font-size:12.5px;color:var(--muted);display:inline-flex;gap:5px;align-items:center"><input type="checkbox" id="gc-auto" style="accent-color:var(--accent)"> 打开时自动同步</label>
+            </div>
+            <span class="imp-msg" id="gc-msg" role="status"></span>
+            <p>直接读取你连接的 Google 日历（主日历）。重复同步只更新日历来的日程，你标的状态会保留。</p>
+            <p style="border-top:1px dashed var(--line);padding-top:8px">也可以导入日历文件：选择从 Google 日历导出的 <b>.zip</b> 或 <b>.ics</b>。</p>
             <div class="row">
               <label for="imp-range" style="font-size:12.5px;color:var(--muted)">导入范围</label>
               <select id="imp-range">
@@ -388,7 +408,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
               </select>
             </div>
             <div class="row">
-              <label class="btn primary" for="imp-file" style="cursor:pointer">选择日历文件</label>
+              <label class="btn" for="imp-file" style="cursor:pointer">选择日历文件</label>
               <input type="file" id="imp-file" accept=".ics,.zip,text/calendar,application/zip" hidden>
             </div>
             <span class="imp-msg" id="imp-msg" role="status"></span>
@@ -419,12 +439,31 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     <header class="top">
       <div>
         <h2 class="h1">年度大事记</h2>
-        <p class="lede">一条更长的时间线，每年记下最重要的几件事。月度时间轴里标了星的里程碑会自动出现在对应年份，点它可以跳回那个月。</p>
+        <p class="lede">先选一年，下面就是这一年从 1 月到 12 月的时间轴。跨几个月的事显示成横条；月度时间轴里标了星的里程碑会自动出现，点它可以跳回那个月。</p>
       </div>
-      <div class="stats"><div class="stat"><b id="yr-count">0</b><span>已记录大事</span></div><div class="stat"><b id="yr-span">—</b><span>时间跨度</span></div></div>
+      <div class="stats"><div class="stat"><b id="yr-count">0</b><span>已记录大事</span></div><div class="stat"><b id="yr-span">—</b><span>可选年份</span></div></div>
     </header>
-    <div class="yt-scroll"><div class="yt" id="yt"></div></div>
+    <div class="ypick" id="ypick" aria-label="选择年份"></div>
+    <div id="ydetail"></div>
   </section>
+</div>
+
+<div class="modal-back" id="ye-modal" hidden>
+  <form class="modal" id="ye-form" role="dialog" aria-modal="true" aria-labelledby="ye-h">
+    <h3 id="ye-h">编辑大事</h3>
+    <label>内容<input type="text" id="ye-text" maxlength="200" required></label>
+    <div class="row">
+      <label>年份<select id="ye-year"></select></label>
+      <label>开始月份<select id="ye-from"></select></label>
+      <label>结束月份<select id="ye-to"></select></label>
+    </div>
+    <p class="note">开始月份选「全年」表示不限定月份；结束月份晚于开始月份时，会在时间轴上显示成横条。</p>
+    <div class="acts">
+      <button class="btn danger" type="button" id="ye-del">删除</button>
+      <button class="btn" type="button" id="ye-cancel">取消</button>
+      <button class="btn primary" type="submit">保存</button>
+    </div>
+  </form>
 </div>
 
 <div class="modal-back" id="ev-modal" hidden>
@@ -845,6 +884,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     inlineAdd = null;
     renderWeek();
     subscribeWeek();
+    if (typeof syncAuto !== "undefined" && syncAuto.checked && store.mode === "db") setTimeout(() => syncGcal(false), 300);
   }
   function subscribeWeek() {
     const p = curPath();
@@ -1205,17 +1245,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       flushNow(curPath());
       let n = 0, wcount = 0;
       for (const [mk, list] of Object.entries(byWeek)) {
-        const p = wPath(mk);
-        const cur = mk === ymd(wkMonday) ? { items: ws.items, backlog: ws.backlog } : wkNorm(await readDoc(p));
-        const prev = new Map(cur.items.filter(i => i.src === "gcal").map(i => [i.key, i]));
-        const merged = cur.items.filter(i => i.src !== "gcal").concat(list.map(o => {
-          const old = prev.get(o.key);
-          return evNorm({ id: old?.id || uid(), title: o.title, date: o.date, start: o.start, end: o.end, status: old?.status || "todo", src: "gcal", key: o.key });
-        }));
-        if (!list.length && !prev.size) continue;
-        n += list.length; wcount++;
-        if (mk === ymd(wkMonday)) { ws.items = merged; renderWeek(); touch(p); }
-        else { const body = wkSer({ items: merged, backlog: cur.backlog }); await writeDoc(p, body); }
+        if (await mergeGcalWeek(mk, list)) { n += list.length; wcount++; }
       }
       impMsg("ok", n ? `已导入 ${n} 个日程，分布在 ${wcount} 周里。` : "这个范围内没有日程。可以换个导入范围再试。");
     } catch (err) {
@@ -1223,6 +1253,85 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       impMsg("error", err?.message === "jszip" ? "解压组件加载失败。可以先解压，再选里面的 .ics 文件。" : "没能读懂这个文件。请确认是从 Google 日历导出的 .ics 或 .zip。");
     }
   });
+  // Replace this week's calendar-sourced items with `list`, keeping statuses the viewer set (matched by key).
+  async function mergeGcalWeek(mk, list) {
+    const p = wPath(mk), isCur = mk === ymd(wkMonday);
+    const cur = isCur ? { items: ws.items, backlog: ws.backlog } : wkNorm(await readDoc(p));
+    const prev = new Map(cur.items.filter(i => i.src === "gcal").map(i => [i.key, i]));
+    if (!list.length && !prev.size) return false;
+    const merged = cur.items.filter(i => i.src !== "gcal").concat(list.map(o => {
+      const old = prev.get(o.key);
+      return evNorm({ id: old?.id || uid(), title: o.title, date: o.date, start: o.start, end: o.end, status: old?.status || "todo", src: "gcal", key: o.key });
+    }));
+    if (isCur) { ws.items = merged; renderWeek(); touch(p); }
+    else await writeDoc(p, wkSer({ items: merged, backlog: cur.backlog }));
+    return true;
+  }
+
+  // --- Live sync through the viewer's Google Calendar connector
+  const GCAL = "Google Calendar";
+  const syncBtn = $("#gc-sync"), syncAuto = $("#gc-auto");
+  syncAuto.checked = pref.get("gcauto", "0") === "1";
+  syncAuto.addEventListener("change", () => pref.set("gcauto", syncAuto.checked ? 1 : 0));
+  let mcpNs;   // undefined = not asked yet, null = unavailable here
+  const gcMsg = (s, t) => { const el = $("#gc-msg"); el.dataset.s = s; el.textContent = t; };
+  function gcalToItems(events, from, to) {
+    const out = [];
+    const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    for (const e of events || []) {
+      if (!e || e.status === "cancelled" || !e.start) continue;
+      const title = String(e.summary || "（无标题）").slice(0, 120), id = String(e.id || title);
+      if (e.start.date) {   // all-day: end.date is exclusive
+        let d = parseYmd(e.start.date); const end = e.end?.date ? parseYmd(e.end.date) : addDays(d, 1);
+        for (; d < end; d = addDays(d, 1)) if (d >= from && d < to) out.push({ key: "g:" + id + "|" + ymd(d), title, date: ymd(d), start: "", end: "" });
+      } else if (e.start.dateTime) {
+        const s = new Date(e.start.dateTime), en = e.end?.dateTime ? new Date(e.end.dateTime) : null;
+        if (isNaN(s) || s < from || s >= to) continue;
+        out.push({ key: "g:" + id, title, date: ymd(s), start: hm(s), end: en && ymd(en) === ymd(s) && hm(en) > hm(s) ? hm(en) : "" });
+      }
+    }
+    return out;
+  }
+  async function syncGcal(manual) {
+    if (store.mode === "pending" || store.mode === "readonly") { if (manual) gcMsg("error", store.mode === "readonly" ? "只读模式下不能同步。" : "存储还没连上，稍等几秒再试。"); return; }
+    if (mcpNs === undefined) mcpNs = window.claude?.use ? await window.claude.use("mcp").catch(() => null) : null;
+    if (!mcpNs) { if (manual) gcMsg("error", "这里用不了实时同步。可以改用下面的文件导入。"); return; }
+    const monday = new Date(wkMonday), from = monday, to = addDays(monday, 7);
+    const wk = ymd(monday);
+    syncBtn.disabled = true; gcMsg("", "正在读取 Google 日历…");
+    try {
+      let events = [], token, pages = 0;
+      do {
+        const input = { startTime: `${wk}T00:00:00`, endTime: `${ymd(to)}T00:00:00`, orderBy: "startTime", pageSize: 250 };
+        if (token) input.pageToken = token;
+        let res;
+        try { res = await mcpNs.callTool(GCAL, "list_events", input, { cache: false }); }
+        catch (e) { if (e?.retryable) { await new Promise(r => setTimeout(r, Math.min(e.retryAfterMs || 1500, 10000))); res = await mcpNs.callTool(GCAL, "list_events", input, { cache: false }); } else throw e; }
+        const pl = res?.payload;
+        events = events.concat(Array.isArray(pl?.events) ? pl.events : []);
+        token = typeof pl?.nextPageToken === "string" ? pl.nextPageToken : null;
+      } while (token && ++pages < 6);
+      if (ymd(wkMonday) !== wk) return;   // the viewer moved to another week meanwhile
+      const items = gcalToItems(events, from, to);
+      flushNow(curPath());
+      await mergeGcalWeek(wk, items);
+      const t = new Date();
+      gcMsg("ok", items.length ? `已同步本周 ${items.length} 个日程（${pad(t.getHours())}:${pad(t.getMinutes())}）` : "Google 日历里这一周没有日程。");
+      if (manual && !syncAuto.checked) { syncAuto.checked = true; pref.set("gcauto", 1); }
+    } catch (e) {
+      const c = e?.code;
+      const msg = c === "server_not_connected" ? "还没连接 Google 日历：到 claude.ai 设置 → 连接器里添加 Google Calendar。"
+        : c === "needs_reauth" ? "Google 日历的授权过期了：到 claude.ai 设置 → 连接器里重新连接。"
+        : c === "not_in_manifest" ? "这个页面读取日历的权限被关掉了，可以在页面的权限菜单里重新打开。"
+        : c === "approval_required" || c === "consent_required" ? "需要你允许这个页面读取日历，点「同步本周」再试一次。"
+        : c === "selection_required" ? "你有多个 Google 日历连接，先在弹出的提示里选一个。"
+        : c === "server_unavailable" ? "Google 日历暂时连不上，过一会儿再试。"
+        : "同步失败，过一会儿再试。";
+      gcMsg("error", msg);
+    } finally { syncBtn.disabled = false; }
+  }
+  syncBtn.addEventListener("click", () => syncGcal(true));
+
   function loadJSZip() {
     if (window.JSZip) return Promise.resolve(window.JSZip);
     return new Promise((res, rej) => {
@@ -1341,105 +1450,175 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   }
 
   // ================= Year view =================
-  const yrState = {};   // year -> {events:[{id, month, text}]}
+  const yrState = {};   // year -> {events:[{id, month (0 = whole year), end?, text}]}
   let yrRange = { from: 2026, to: 2036 };
   const YR_SET = "settings/years";
   const yPath = y => "years/" + y;
-  const yNorm = d => ({ events: Array.isArray(d?.events) ? d.events.filter(x => x && typeof x.text === "string").map(x => ({ id: cleanId(x.id), month: Number.isInteger(x.month) && x.month >= 0 && x.month <= 12 ? x.month : 0, text: x.text.slice(0, 200) })) : [] });
-  const ySer = s => { const ev = s.events.filter(x => x.text.trim()).map(x => ({ id: x.id, month: x.month, text: x.text.trim() })); return ev.length ? { events: ev, updatedAt: new Date().toISOString() } : null; };
-  const ytEl = $("#yt");
+  const monthInt = v => Number.isInteger(v) && v >= 0 && v <= 12 ? v : 0;
+  const yNorm = d => ({ events: Array.isArray(d?.events) ? d.events.filter(x => x && typeof x.text === "string").map(x => {
+    const month = monthInt(x.month), end = monthInt(x.end);
+    return { id: cleanId(x.id), month, end: month && end > month ? end : 0, text: x.text.slice(0, 200) };
+  }) : [] });
+  const ySer = s => {
+    const ev = s.events.filter(x => x.text.trim()).map(x => x.end > x.month && x.month ? { id: x.id, month: x.month, end: x.end, text: x.text.trim() } : { id: x.id, month: x.month, text: x.text.trim() });
+    return ev.length ? { events: ev, updatedAt: new Date().toISOString() } : null;
+  };
+  const ypickEl = $("#ypick"), ydEl = $("#ydetail"), yPanel = $("#p-years");
+  let ySel = parseInt(pref.get("ysel", ""), 10);
+  let yeEditing = null;   // {y, id} while the event editor is open
   function ensureYear(y) {
     if (yrState[y]) return yrState[y];
     const s = yrState[y] = { events: [] };
     const p = yPath(y);
     sers[p] = () => ySer(s);
     appliers[p] = d => { s.events = yNorm(d).events; renderYears(); };
-    focusers[p] = () => !!document.activeElement?.closest?.(`.ycol[data-y="${y}"]`);
+    focusers[p] = () => yeEditing?.y === y || (ySel === y && ydEl.contains(document.activeElement) && document.activeElement.tagName === "INPUT");
     return s;
   }
   sers[YR_SET] = () => ({ from: yrRange.from, to: yrRange.to });
   appliers[YR_SET] = d => { if (d && Number.isInteger(d.from) && Number.isInteger(d.to) && d.to >= d.from && d.to - d.from < 80) { yrRange = { from: d.from, to: d.to }; renderYears(); } };
-  const sortEv = (a, b) => (a.month || 13) - (b.month || 13);
+  const milestonesOf = y => KEYS.filter(k => k.startsWith(y + "-") && months[k].milestone).map(k => {
+    const mm = months[k];
+    return { key: k, month: +k.slice(5), label: mm.theme.trim() || mm.tasks.find(t => t.text.trim())?.text || "里程碑" };
+  });
+  const countOf = y => (yrState[y]?.events.filter(e => e.text.trim()).length || 0) + milestonesOf(y).length;
+  const msBtn = m => { const b = h("button", { class: "ms", type: "button", "data-goto": m.key, title: "在月度时间轴里查看" }); b.innerHTML = STAR; b.append(h("span", { text: m.label })); return b; };
+  const addInput = (y, m) => h("input", { class: "add-input", type: "text", maxlength: "200", id: `ya-${y}-${m}`, "data-month": String(m), placeholder: m ? "+ 添加" : "+ 添加全年目标", "aria-label": m ? `为 ${y} 年 ${m} 月添加大事` : `为 ${y} 年添加全年目标`, autocomplete: "off" });
+
   function renderYears() {
-    if (ytEl.contains(document.activeElement) && document.activeElement.tagName !== "BUTTON") return;
-    const cols = [];
+    const ae = document.activeElement;
+    if (yPanel.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+    if (!(ySel >= yrRange.from && ySel <= yrRange.to)) ySel = now.getFullYear() >= yrRange.from && now.getFullYear() <= yrRange.to ? now.getFullYear() : yrRange.from;
     let total = 0;
-    const ext = side => h("div", { class: "y-ext ro-hide" }, h("button", { class: "btn", type: "button", "data-ext": side, text: side === "before" ? `＋ ${yrRange.from - 1}` : `＋ ${yrRange.to + 1}`, "aria-label": side === "before" ? `往前加一年（${yrRange.from - 1}）` : `往后加一年（${yrRange.to + 1}）` }));
-    cols.push(ext("before"));
+    const chips = [h("button", { class: "ychip add ro-hide", type: "button", "data-ext": "before", text: `＋ ${yrRange.from - 1}`, "aria-label": `往前加一年（${yrRange.from - 1}）` })];
     for (let y = yrRange.from; y <= yrRange.to; y++) {
-      const s = ensureYear(y);
-      const ms = KEYS.filter(k => k.startsWith(y + "-") && months[k].milestone).map(k => {
-        const m = +k.slice(5), mm = months[k];
-        const label = mm.theme.trim() || mm.tasks.find(t => t.text.trim())?.text || "里程碑";
-        const b = h("button", { class: "ms", type: "button", "data-goto": k, title: "在月度时间轴里查看" });
-        b.innerHTML = STAR; b.append(h("em", { text: `${m}月` }), h("span", { text: label }));
-        return b;
-      });
-      total += ms.length + s.events.filter(x => x.text.trim()).length;
-      const evs = [...s.events].sort(sortEv).map(ev => {
-        const sel = h("select", { "aria-label": "月份", id: `ym-${ev.id}` }, h("option", { value: "0", text: "—" }), Array.from({ length: 12 }, (_, i) => h("option", { value: String(i + 1), text: `${i + 1}月` })));
-        sel.value = String(ev.month);
-        const ta = h("textarea", { class: "ye-text", rows: "1", maxlength: "200", id: `yt-${ev.id}`, "aria-label": `${y} 年大事` });
-        ta.value = ev.text;
-        if (store.mode === "readonly") sel.disabled = ta.disabled = true;
-        return h("div", { class: "ye", "data-id": ev.id }, sel, ta, h("button", { class: "del", type: "button", text: "×", "aria-label": "删除" }));
-      });
-      cols.push(h("div", { class: "ycol" + (y === now.getFullYear() ? " now" : ""), "data-y": String(y) },
-        h("div", { class: "yh" }, h("b", { text: String(y) }), h("span", { text: y === now.getFullYear() ? "今年" : "" })),
-        h("div", { class: "ynode" }),
-        h("div", { class: "ybody" }, ms, evs,
-          h("div", { class: "add-row" }, h("span", { class: "plus", "aria-hidden": "true", text: "+" }),
-            h("input", { class: "add-input", type: "text", maxlength: "200", id: `ya-${y}`, placeholder: "记下这一年的大事", "aria-label": `为 ${y} 年添加大事`, autocomplete: "off" })))));
+      ensureYear(y);
+      const n = countOf(y); total += n;
+      chips.push(h("button", { class: "ychip", type: "button", "data-y": String(y), "aria-pressed": String(y === ySel) },
+        h("b", { text: String(y) }), h("span", { text: (y === now.getFullYear() ? "今年 · " : "") + (n ? `${n} 件` : "未记录") })));
     }
-    cols.push(ext("after"));
-    ytEl.replaceChildren(...cols);
-    $$(".ye-text", ytEl).forEach(autosize);
+    chips.push(h("button", { class: "ychip add ro-hide", type: "button", "data-ext": "after", text: `＋ ${yrRange.to + 1}`, "aria-label": `往后加一年（${yrRange.to + 1}）` }));
+    const focusedY = ae?.closest?.("#ypick") ? ae.dataset.y || ae.dataset.ext : null;
+    ypickEl.replaceChildren(...chips);
+    if (focusedY) ypickEl.querySelector(`[data-y="${focusedY}"], [data-ext="${focusedY}"]`)?.focus();
     $("#yr-count").textContent = total;
     $("#yr-span").textContent = `${yrRange.to - yrRange.from + 1} 年`;
+    renderYearDetail(ySel);
   }
-  const yOf = el => +el.closest(".ycol")?.dataset.y;
-  const yEvOf = (y, el) => yrState[y]?.events.find(x => x.id === el.closest(".ye")?.dataset.id);
-  ytEl.addEventListener("click", e => {
+
+  function renderYearDetail(y) {
+    const s = ensureYear(y);
+    const evs = s.events.filter(e => e.text.trim() || true);
+    const whole = evs.filter(e => !e.month);
+    const spans = evs.filter(e => e.month && e.end > e.month).sort((a, b) => a.month - b.month || b.end - a.end);
+    const singles = evs.filter(e => e.month && !(e.end > e.month));
+    const ms = milestonesOf(y);
+    // pack spans into lanes so overlapping ranges stack
+    const laneEnds = [];
+    const placed = spans.map(e => { let l = laneEnds.findIndex(end => end < e.month); if (l < 0) { l = laneEnds.length; laneEnds.push(0); } laneEnds[l] = e.end; return { e, lane: l }; });
+    const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+    const isNowYear = y === now.getFullYear(), nowM = now.getMonth() + 1;
+    const head = h("div", { class: "yd-head" },
+      h("h3", { text: String(y) }),
+      h("span", { class: "meta", text: `${leap ? "366 天 · 闰年" : "365 天"} · 共 ${countOf(y)} 件${isNowYear ? " · 今年" : ""}` }),
+      h("div", { class: "nav" },
+        h("button", { class: "btn", type: "button", "data-ystep": "-1", disabled: y <= yrRange.from, text: `‹ ${y - 1}` }),
+        h("button", { class: "btn", type: "button", "data-ystep": "1", disabled: y >= yrRange.to, text: `${y + 1} ›` })));
+    const all = h("div", { class: "yall" }, h("span", { class: "lbl", text: "全年" }),
+      whole.map(e => h("button", { class: "chip-ev", type: "button", "data-ev": e.id, text: e.text })),
+      store.mode === "readonly" ? null : addInput(y, 0));
+    const grid = h("div", { class: "yd", "aria-label": `${y} 年时间轴` });
+    const bodyRow = 3 + laneEnds.length;
+    for (let m = 1; m <= 12; m++) {
+      const q = Math.ceil(m / 3);
+      grid.append(h("div", { class: "yd-mh" + (isNowYear && m === nowM ? " now" : ""), style: `grid-row:1;grid-column:${m};--qc:var(--q${q})` },
+        h("b", {}, String(m), h("small", { text: "月" })), h("span", { text: `${new Date(y, m, 0).getDate()} 天` })));
+    }
+    const line = h("div", { class: "yd-line", style: "grid-row:2", "aria-hidden": "true" });
+    for (let m = 1; m <= 12; m++) {
+      const has = singles.some(e => e.month === m) || spans.some(e => e.month <= m && e.end >= m) || ms.some(x => x.month === m);
+      line.append(h("i", { class: (has ? "has" : "") + (isNowYear && m === nowM ? " now" : "") }));
+    }
+    grid.append(line);
+    placed.forEach(({ e, lane }) => grid.append(h("button", { class: "yd-span", type: "button", "data-ev": e.id, style: `grid-row:${3 + lane};grid-column:${e.month} / ${e.end + 1}`, title: `${e.month}–${e.end} 月：${e.text}` },
+      h("em", { text: `${e.month}–${e.end} 月` }), e.text)));
+    for (let m = 1; m <= 12; m++) {
+      grid.append(h("div", { class: "yd-col", style: `grid-row:${bodyRow};grid-column:${m}` },
+        ms.filter(x => x.month === m).map(msBtn),
+        singles.filter(e => e.month === m).map(e => h("button", { class: "yd-ev", type: "button", "data-ev": e.id, text: e.text })),
+        store.mode === "readonly" ? null : addInput(y, m)));
+    }
+    ydEl.replaceChildren(head, all, h("div", { class: "yd-scroll" }, grid));
+  }
+
+  function selectYear(y) { ySel = y; pref.set("ysel", y); renderYears(); }
+  ypickEl.addEventListener("click", e => {
+    const chip = e.target.closest("[data-y]");
+    if (chip) return selectYear(+chip.dataset.y);
+    const ext = e.target.closest("[data-ext]");
+    if (!ext || store.mode === "readonly") return;
+    if (ext.dataset.ext === "before") { yrRange.from--; ySel = yrRange.from; } else { yrRange.to++; ySel = yrRange.to; }
+    pref.set("ysel", ySel); touch(YR_SET); renderYears();
+  });
+  ydEl.addEventListener("click", e => {
+    const step = e.target.closest("[data-ystep]");
+    if (step) return selectYear(ySel + +step.dataset.ystep);
     const go = e.target.closest("[data-goto]");
     if (go) { showTab("month"); requestAnimationFrame(() => jumpTo("m-" + go.dataset.goto)); return; }
-    if (store.mode === "readonly") return;
-    const ext = e.target.closest("[data-ext]");
-    if (ext) {
-      if (ext.dataset.ext === "before") yrRange.from--; else yrRange.to++;
-      touch(YR_SET); renderYears();
-      const btn = $(`[data-ext="${ext.dataset.ext}"]`, ytEl); btn?.focus();
-      return;
+    const ev = e.target.closest("[data-ev]");
+    if (ev && store.mode !== "readonly") openYE(ySel, ev.dataset.ev);
+  });
+  ydEl.addEventListener("keydown", e => {
+    const t = e.target;
+    if (!t.classList.contains("add-input") || e.key !== "Enter" || e.isComposing || store.mode === "readonly") return;
+    e.preventDefault();
+    const v = t.value.trim(); if (!v) return;
+    const y = ySel, m = +t.dataset.month;
+    const r = /^(\d{1,2})\s*[-–~至到]\s*(\d{1,2})\s*月\s*[:：]?\s*(.+)$/.exec(v);   // "1-3月 xxx" makes a range
+    let ev = { id: uid(), month: m, end: 0, text: v };
+    if (r && +r[1] >= 1 && +r[2] <= 12 && +r[2] > +r[1]) ev = { id: ev.id, month: +r[1], end: +r[2], text: r[3] };
+    yrState[y].events.push(ev);
+    touch(yPath(y)); t.blur(); renderYears();
+    document.getElementById(`ya-${y}-${m}`)?.focus();
+  });
+  ydEl.addEventListener("focusout", () => setTimeout(() => { if (!ydEl.contains(document.activeElement)) { retryStash(yPath(ySel)); renderYears(); } }, 0));
+
+  // event editor
+  const yeModal = $("#ye-modal"), yeForm = $("#ye-form");
+  const monthOpts = (sel, first) => sel.replaceChildren(h("option", { value: "0", text: first }), ...Array.from({ length: 12 }, (_, i) => h("option", { value: String(i + 1), text: `${i + 1} 月` })));
+  monthOpts($("#ye-from"), "全年"); monthOpts($("#ye-to"), "同开始月");
+  let yeLastFocus = null;
+  function openYE(y, id) {
+    const ev = yrState[y]?.events.find(x => x.id === id); if (!ev) return;
+    yeEditing = { y, id }; yeLastFocus = document.activeElement;
+    const ys = $("#ye-year");
+    ys.replaceChildren(...Array.from({ length: yrRange.to - yrRange.from + 1 }, (_, i) => h("option", { value: String(yrRange.from + i), text: `${yrRange.from + i} 年` })));
+    ys.value = String(y);
+    $("#ye-text").value = ev.text; $("#ye-from").value = String(ev.month); $("#ye-to").value = String(ev.end || 0);
+    yeModal.hidden = false; $("#ye-text").focus();
+  }
+  function closeYE() { const y = yeEditing?.y; yeModal.hidden = true; yeEditing = null; if (yeLastFocus?.isConnected) yeLastFocus.focus(); if (y) retryStash(yPath(y)); renderYears(); }
+  $("#ye-cancel").addEventListener("click", closeYE);
+  yeModal.addEventListener("click", e => { if (e.target === yeModal) closeYE(); });
+  yeModal.addEventListener("keydown", e => { if (e.key === "Escape") closeYE(); });
+  $("#ye-del").addEventListener("click", () => {
+    const { y, id } = yeEditing; yrState[y].events = yrState[y].events.filter(x => x.id !== id);
+    touch(yPath(y)); yeLastFocus = null; closeYE();
+  });
+  yeForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const { y, id } = yeEditing, ev = yrState[y].events.find(x => x.id === id);
+    const text = $("#ye-text").value.trim(); if (!text) return $("#ye-text").focus();
+    const month = +$("#ye-from").value, to = +$("#ye-to").value, ny = +$("#ye-year").value || y;
+    Object.assign(ev, { text, month, end: month && to > month ? to : 0 });
+    if (ny !== y) {
+      yrState[y].events = yrState[y].events.filter(x => x !== ev);
+      ensureYear(ny).events.push(ev);
+      touch(yPath(ny)); ySel = ny; pref.set("ysel", ny);
     }
-    const del = e.target.closest(".del");
-    if (del) { const y = yOf(del), ev = yEvOf(y, del); yrState[y].events = yrState[y].events.filter(x => x !== ev); touch(yPath(y)); del.blur(); renderYears(); }
+    touch(yPath(y)); yeLastFocus = null; closeYE();
   });
-  ytEl.addEventListener("keydown", e => {
-    if (e.isComposing || store.mode === "readonly") return;
-    const t = e.target, y = yOf(t); if (!y) return;
-    if (t.classList.contains("add-input") && e.key === "Enter") {
-      e.preventDefault();
-      const v = t.value.trim(); if (!v) return;
-      const mm = /^(\d{1,2})\s*月\s*[:：]?\s*(.+)$/.exec(v);   // "3月 xxx" sets the month
-      const month = mm && +mm[1] >= 1 && +mm[1] <= 12 ? +mm[1] : 0;
-      yrState[y].events.push({ id: uid(), month, text: month ? mm[2] : v });
-      touch(yPath(y)); t.blur(); renderYears(); $(`#ya-${y}`)?.focus();
-    } else if (t.classList.contains("ye-text") && e.key === "Enter") { e.preventDefault(); t.blur(); }
-  });
-  ytEl.addEventListener("input", e => {
-    const t = e.target; if (!t.classList.contains("ye-text")) return;
-    const y = yOf(t), ev = yEvOf(y, t); if (!ev) return;
-    ev.text = t.value.replace(/\n/g, " "); autosize(t); touch(yPath(y));
-  });
-  ytEl.addEventListener("change", e => {
-    const t = e.target; if (t.tagName !== "SELECT") return;
-    const y = yOf(t), ev = yEvOf(y, t); if (!ev) return;
-    ev.month = +t.value; touch(yPath(y)); t.blur(); renderYears();
-  });
-  ytEl.addEventListener("focusout", () => setTimeout(() => {
-    if (ytEl.contains(document.activeElement)) return;
-    for (let y = yrRange.from; y <= yrRange.to; y++) retryStash(yPath(y));
-    renderYears();
-  }, 0));
+
 
   // ================= Boot =================
   async function initStorage() {
@@ -1463,6 +1642,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     subscribeWeek();
     [...dirty].forEach(p => flush(p));
     refreshStatus();
+    if (syncAuto.checked && store.mode === "db") setTimeout(() => syncGcal(false), 600);
   }
 
   setWeek(now);
