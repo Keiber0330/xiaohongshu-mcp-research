@@ -1,33 +1,30 @@
 <title>2027–2029 月度时间轴</title>
+<script>try{var k=localStorage.getItem("tl-pref-skin"),m=localStorage.getItem("tl-pref-mode");if(k!=="min")document.documentElement.classList.add("sk-sys");if(m==="light"||m==="dark")document.documentElement.dataset.mode=m}catch(e){document.documentElement.classList.add("sk-sys")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap">
 <style>
-/* Theme: "Modern Minimalist" from anthropics/skills theme-factory —
-   Charcoal #36454f (primary), Slate Gray #708090 (accent), Light Gray #d3d3d3 (dividers), White.
-   Headers bold / body regular in one sans family (DejaVu Sans where installed; Noto Sans SC carries Chinese).
-   Layout: one planner, three views behind tabs.
-   月度 = sticky 36-cell rail + quarter rows of month cards.
-   周日程 = stats/backlog sidebar + 7-day × hourly grid + auto-drawn week timeline.
-   年度大事 = year picker + one year on a zoomable vis-timeline (timeline-generator skill). */
-:root {
-  --bg: #f3f4f5;
-  --surface: #ffffff;
-  --ink: #36454f;
-  --muted: #5f6d7a;
-  --line: #d3d3d3;
-  --accent: #36454f;
-  --accent-soft: #e8ebed;
-  --slate: #708090;
-  --star: #a8823a;
+/* Two design systems, each with a light and a dark appearance.
+   · 系统风格 (default, html.sk-sys): modeled on Apple's Human Interface Guidelines — iOS system colors,
+     grouped backgrounds, label/secondaryLabel text, the system font stack, segmented controls and switches.
+   · 极简风格: "Modern Minimalist" from anthropics/skills theme-factory — Charcoal #36454f, Slate Gray #708090,
+     Light Gray #d3d3d3, White.
+   Appearance follows the OS (prefers-color-scheme) or the viewer's data-theme; the 外观 tab can pin it with
+   html[data-mode="light|dark"]. .pv-light / .pv-dark scope the same tokens onto the preview frames.
+   Layout: one planner, four views behind tabs (月度 / 周日程 / 年度大事 / 外观). */
+:root, .pv-light {
+  --bg: #f3f4f5; --surface: #ffffff; --ink: #36454f; --muted: #5f6d7a; --line: #d3d3d3;
+  --accent: #36454f; --accent-soft: #e8ebed; --slate: #708090; --star: #a8823a;
   --ok: #4f7d64; --warn: #a8823a; --bad: #a35d4d;
   --q1: #708090; --q2: #7b9184; --q3: #a99a72; --q4: #a37c6f;
   --rail-0: #e5e7e9; --rail-1: #c9cfd4; --rail-2: #a3adb6; --rail-3: #36454f;
-  --gcal: #eceff2;
+  --gcal: #eceff2; --tl: #708090;
   --c-study: #5d7894; --c-work: #36454f; --c-life: #6f8f7c; --c-other: #9aa4ad;
+  --fill: #e8ebed; --fill2: #c9cfd4; --seg: #ffffff; --gray3: #a3adb6; --on-accent: #ffffff;
   --display: "DejaVu Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --body: "DejaVu Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --r: 8px;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -36,20 +33,84 @@
     --ok: #86b598; --warn: #d1ac62; --bad: #d08b7a;
     --q1: #9aa7b3; --q2: #9bb3a4; --q3: #c9b98f; --q4: #c79c8e;
     --rail-0: #2d363e; --rail-1: #43505a; --rail-2: #708090; --rail-3: #d3d3d3;
-    --gcal: #2c3640;
+    --gcal: #2c3640; --tl: #9aa7b3;
     --c-study: #8fa9c4; --c-work: #d3d3d3; --c-life: #9fbfac; --c-other: #7d8892;
+    --fill: #333d46; --fill2: #43505a; --seg: #43505a; --gray3: #708090; --on-accent: #1d2329;
     color-scheme: dark;
   }
 }
-:root[data-theme="dark"] {
+:root[data-theme="dark"], :root[data-mode="dark"], .pv-dark {
   --bg: #1d2329; --surface: #262e35; --ink: #eceff1; --muted: #a2adb7; --line: #3a444d;
   --accent: #d3d3d3; --accent-soft: #333d46; --slate: #9aa7b3; --star: #d1ac62;
   --ok: #86b598; --warn: #d1ac62; --bad: #d08b7a;
   --q1: #9aa7b3; --q2: #9bb3a4; --q3: #c9b98f; --q4: #c79c8e;
   --rail-0: #2d363e; --rail-1: #43505a; --rail-2: #708090; --rail-3: #d3d3d3;
-  --gcal: #2c3640;
+  --gcal: #2c3640; --tl: #9aa7b3;
   --c-study: #8fa9c4; --c-work: #d3d3d3; --c-life: #9fbfac; --c-other: #7d8892;
+  --fill: #333d46; --fill2: #43505a; --seg: #43505a; --gray3: #708090; --on-accent: #1d2329;
   color-scheme: dark;
+}
+:root[data-mode="light"] {
+  --bg: #f3f4f5; --surface: #ffffff; --ink: #36454f; --muted: #5f6d7a; --line: #d3d3d3;
+  --accent: #36454f; --accent-soft: #e8ebed; --slate: #708090; --star: #a8823a;
+  --ok: #4f7d64; --warn: #a8823a; --bad: #a35d4d;
+  --q1: #708090; --q2: #7b9184; --q3: #a99a72; --q4: #a37c6f;
+  --rail-0: #e5e7e9; --rail-1: #c9cfd4; --rail-2: #a3adb6; --rail-3: #36454f;
+  --gcal: #eceff2; --tl: #708090;
+  --c-study: #5d7894; --c-work: #36454f; --c-life: #6f8f7c; --c-other: #9aa4ad;
+  --fill: #e8ebed; --fill2: #c9cfd4; --seg: #ffffff; --gray3: #a3adb6; --on-accent: #ffffff;
+  color-scheme: light;
+}
+
+/* 系统风格 — iOS system colors (light: systemBlue #007AFF … / dark: #0A84FF …) */
+:root.sk-sys, .sk-sys .pv-light {
+  --bg: #f2f2f7; --surface: #ffffff; --ink: #000000; --muted: #6c6c70; --line: #c6c6c8;
+  --accent: #007aff; --accent-soft: rgba(0, 122, 255, 0.12); --slate: #8e8e93; --star: #ff9500;
+  --ok: #34c759; --warn: #ff9500; --bad: #ff3b30;
+  --q1: #32ade6; --q2: #34c759; --q3: #ff9500; --q4: #af52de;
+  --rail-0: #e5e5ea; --rail-1: #bfdeff; --rail-2: #66afff; --rail-3: #007aff;
+  --gcal: #e5f1ff; --tl: #007aff;
+  --c-study: #007aff; --c-work: #5856d6; --c-life: #34c759; --c-other: #8e8e93;
+  --fill: rgba(118, 118, 128, 0.12); --fill2: #e9e9eb; --seg: #ffffff; --gray3: #c7c7cc; --on-accent: #ffffff;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", "Noto Sans SC", system-ui, sans-serif;
+  --body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", "Noto Sans SC", system-ui, sans-serif;
+  --r: 12px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root.sk-sys:not([data-theme="light"]) {
+    --bg: #000000; --surface: #1c1c1e; --ink: #ffffff; --muted: #98989f; --line: #38383a;
+    --accent: #0a84ff; --accent-soft: rgba(10, 132, 255, 0.2); --slate: #8e8e93; --star: #ff9f0a;
+    --ok: #30d158; --warn: #ff9f0a; --bad: #ff453a;
+    --q1: #64d2ff; --q2: #30d158; --q3: #ff9f0a; --q4: #bf5af2;
+    --rail-0: #2c2c2e; --rail-1: #0b3a6e; --rail-2: #0a5bb5; --rail-3: #0a84ff;
+    --gcal: #102a47; --tl: #0a84ff;
+    --c-study: #0a84ff; --c-work: #5e5ce6; --c-life: #30d158; --c-other: #8e8e93;
+    --fill: rgba(118, 118, 128, 0.24); --fill2: #39393d; --seg: #636366; --gray3: #48484a; --on-accent: #ffffff;
+    color-scheme: dark;
+  }
+}
+:root.sk-sys[data-theme="dark"], :root.sk-sys[data-mode="dark"], .sk-sys .pv-dark {
+  --bg: #000000; --surface: #1c1c1e; --ink: #ffffff; --muted: #98989f; --line: #38383a;
+  --accent: #0a84ff; --accent-soft: rgba(10, 132, 255, 0.2); --slate: #8e8e93; --star: #ff9f0a;
+  --ok: #30d158; --warn: #ff9f0a; --bad: #ff453a;
+  --q1: #64d2ff; --q2: #30d158; --q3: #ff9f0a; --q4: #bf5af2;
+  --rail-0: #2c2c2e; --rail-1: #0b3a6e; --rail-2: #0a5bb5; --rail-3: #0a84ff;
+  --gcal: #102a47; --tl: #0a84ff;
+  --c-study: #0a84ff; --c-work: #5e5ce6; --c-life: #30d158; --c-other: #8e8e93;
+  --fill: rgba(118, 118, 128, 0.24); --fill2: #39393d; --seg: #636366; --gray3: #48484a; --on-accent: #ffffff;
+  color-scheme: dark;
+}
+:root.sk-sys[data-mode="light"] {
+  --bg: #f2f2f7; --surface: #ffffff; --ink: #000000; --muted: #6c6c70; --line: #c6c6c8;
+  --accent: #007aff; --accent-soft: rgba(0, 122, 255, 0.12); --slate: #8e8e93; --star: #ff9500;
+  --ok: #34c759; --warn: #ff9500; --bad: #ff3b30;
+  --q1: #32ade6; --q2: #34c759; --q3: #ff9500; --q4: #af52de;
+  --rail-0: #e5e5ea; --rail-1: #bfdeff; --rail-2: #66afff; --rail-3: #007aff;
+  --gcal: #e5f1ff; --tl: #007aff;
+  --c-study: #007aff; --c-work: #5856d6; --c-life: #34c759; --c-other: #8e8e93;
+  --fill: rgba(118, 118, 128, 0.12); --fill2: #e9e9eb; --seg: #ffffff; --gray3: #c7c7cc; --on-accent: #ffffff;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -240,7 +301,7 @@ body.picking .slot:hover { box-shadow: inset 0 0 0 2px var(--accent); }
 .wtl-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
 .wtl-scroll { overflow-x: auto; margin-top: 14px; }
 .wtl { position: relative; display: grid; grid-template-columns: repeat(7, minmax(116px, 1fr)); min-width: 812px; }
-.wtl::before { content: ""; position: absolute; left: 0; right: 0; top: 44px; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--q1) 75%, var(--surface)); }
+.wtl::before { content: ""; position: absolute; left: 0; right: 0; top: 44px; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--tl) 75%, var(--surface)); }
 .wtl-col { position: relative; padding: 0 8px 0 10px; min-width: 0; }
 .wtl-col::after { content: ""; position: absolute; left: 14px; top: 56px; bottom: 0; width: 1px; background: var(--line); }
 .wtl-col .d { font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
@@ -367,6 +428,90 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
 .vt-list button:hover, .vt-list button:focus-visible { background: var(--accent-soft); outline: none; }
 .vt-list em { font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; flex: none; min-width: 4.5em; }
 .vt-list span { min-width: 0; overflow-wrap: anywhere; }
+
+/* ---------- 系统风格 components (segmented control, grouped cards, switches, round checks) ---------- */
+.sk-sys body { font-size: 15px; -webkit-font-smoothing: antialiased; }
+.sk-sys h1, .sk-sys .h1 { font-weight: 700; letter-spacing: -0.015em; }
+.sk-sys .tabbar { border-bottom-color: transparent; }
+.sk-sys .tabs, .seg-ctl { background: var(--fill); border: 0; border-radius: 9px; padding: 2px; gap: 0; }
+.sk-sys .tab { border-radius: 7px; color: var(--ink); font-weight: 500; padding: 5px 16px; }
+.sk-sys .tab[aria-selected="true"] { background: var(--seg); color: var(--ink); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 1px 1px rgba(0, 0, 0, 0.04); }
+.sk-sys .btn { border: 0; background: var(--fill); color: var(--accent); border-radius: 8px; font-weight: 500; padding: 6px 12px; }
+.sk-sys .btn:hover { background: var(--fill2); }
+.sk-sys .btn.primary { background: var(--accent); color: var(--on-accent); }
+.sk-sys .btn.danger { color: var(--bad); }
+.sk-sys .month, .sk-sys .card, .sk-sys .wtl-card, .sk-sys .sched-scroll { border-color: transparent; border-radius: 14px; }
+.sk-sys .month:focus-within { border-color: transparent; box-shadow: 0 0 0 2px var(--accent); }
+.sk-sys .month.is-star { border-color: transparent; box-shadow: inset 0 0 0 1.5px var(--star); }
+.sk-sys .month.is-now { box-shadow: inset 0 0 0 1.5px var(--bad); }
+.sk-sys .card h3 { background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; padding: 12px 14px 0; }
+.sk-sys .rail-wrap { background: color-mix(in srgb, var(--bg) 78%, transparent); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom-color: var(--line); }
+.sk-sys .cell { border-radius: 7px; }
+.sk-sys .tag-now { background: var(--bad); color: #fff; }
+.sk-sys .dh.today .d { color: var(--bad); }
+.sk-sys .dh, .sk-sys .corner { background: var(--surface); }
+.sk-sys .year-head, .sk-sys .yd-head { border-bottom: 1px solid var(--line); }
+.sk-sys .q-label::before { width: 3px; }
+.sk-sys .ychip { border: 0; background: var(--surface); border-radius: 12px; }
+.sk-sys .ychip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.sk-sys .ychip[aria-pressed="true"] span { color: color-mix(in srgb, var(--on-accent) 80%, transparent); }
+.sk-sys .ychip.add { background: transparent; border: 1px dashed var(--line); }
+.sk-sys .cat-btn, .sk-sys .chip-ev { border: 0; background: var(--fill); }
+.sk-sys .modal { border: 0; border-radius: 14px; }
+.sk-sys .modal-back { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.sk-sys .hol { background: var(--fill); }
+.sk-sys .ev { border-radius: 6px; }
+.sk-sys .ev.g { box-shadow: inset 3px 0 0 var(--q1); }
+.sk-sys .wk-nav input[type="date"], .sk-sys .gcal-box select, .sk-sys .modal input[type="text"], .sk-sys .modal input[type="date"], .sk-sys .modal input[type="time"], .sk-sys .modal select { border: 0; background: var(--fill); border-radius: 8px; }
+/* iOS switch */
+.sk-sys .toolbar input[type="checkbox"], .sk-sys #gc-auto, .sk-sys .pv-switch {
+  -webkit-appearance: none; appearance: none; flex: none; position: relative; width: 40px; height: 24px; margin: 0;
+  border-radius: 999px; background: var(--fill2); cursor: pointer; transition: background .2s;
+}
+.sk-sys .toolbar input[type="checkbox"]::before, .sk-sys #gc-auto::before, .sk-sys .pv-switch::before {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); transition: transform .2s;
+}
+.sk-sys .toolbar input[type="checkbox"]:checked, .sk-sys #gc-auto:checked, .sk-sys .pv-switch:checked { background: var(--ok); }
+.sk-sys .toolbar input[type="checkbox"]:checked::before, .sk-sys #gc-auto:checked::before, .sk-sys .pv-switch:checked::before { transform: translateX(16px); }
+.sk-sys .toolbar input[type="checkbox"]:focus-visible, .sk-sys #gc-auto:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Reminders-style round check */
+.sk-sys .task input[type="checkbox"], .sk-sys .pv-check {
+  -webkit-appearance: none; appearance: none; flex: none; width: 20px; height: 20px; margin: 2px 0 0; border-radius: 50%;
+  border: 1.5px solid var(--gray3); display: grid; place-content: center; cursor: pointer; background: transparent;
+}
+.sk-sys .task input[type="checkbox"]:checked, .sk-sys .pv-check:checked { background: var(--accent); border-color: var(--accent); }
+.sk-sys .task input[type="checkbox"]:checked::after, .sk-sys .pv-check:checked::after { content: ""; width: 5px; height: 9px; border: solid var(--on-accent); border-width: 0 2px 2px 0; transform: translate(0, -1px) rotate(45deg); }
+.sk-sys .task input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- 外观 tab ---------- */
+.look-ctl { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-top: 20px; align-items: center; }
+.look-ctl .grp { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.seg-ctl { display: inline-flex; }
+.seg-ctl button { border: 0; background: transparent; color: var(--ink); font: 500 13px var(--body); padding: 5px 14px; border-radius: 7px; cursor: pointer; }
+.seg-ctl button[aria-pressed="true"] { background: var(--seg); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 1px 1px rgba(0, 0, 0, 0.04); }
+.seg-ctl button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pv-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+@media (max-width: 760px) { .pv-row { grid-template-columns: minmax(0, 1fr); } }
+.pv { background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; font-family: var(--body); }
+.pv-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.pv-top b { color: var(--ink); font-size: 15px; }
+.pv h4 { margin: 0; font: 700 28px/1.1 var(--display); letter-spacing: -0.015em; }
+.pv h4 small { display: block; font: 400 13px var(--body); color: var(--muted); letter-spacing: 0; margin-top: 4px; }
+.pv-list { background: var(--surface); border-radius: var(--r); overflow: hidden; }
+.pv-list > div { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 14px; }
+.pv-list > div + div { border-top: 1px solid var(--line); }
+.pv-list .pv-sub { margin-left: auto; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.pv-bars { background: var(--surface); border-radius: var(--r); padding: 12px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px 0; font-size: 12px; }
+.pv-bars span { border-radius: 6px; padding: 3px 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 3px 0 0 var(--c); background: color-mix(in srgb, var(--c) 16%, var(--surface)); }
+.pv-acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pv-acts .sp { flex: 1; }
+.pv-sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.pv-sw div { display: flex; align-items: center; gap: 8px; font-size: 12px; min-width: 0; }
+.pv-sw i { flex: none; width: 26px; height: 26px; border-radius: 7px; box-shadow: inset 0 0 0 1px var(--line); }
+.pv-sw span { min-width: 0; line-height: 1.3; }
+.pv-sw small { display: block; color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.look-note { margin-top: 18px; color: var(--muted); font-size: 12.5px; max-width: 76ch; }
 </style>
 
 <div class="wrap">
@@ -375,6 +520,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       <button class="tab" role="tab" id="tab-month" aria-controls="p-month" aria-selected="true" data-tab="month">月度时间轴</button>
       <button class="tab" role="tab" id="tab-week" aria-controls="p-week" aria-selected="false" data-tab="week">周日程</button>
       <button class="tab" role="tab" id="tab-years" aria-controls="p-years" aria-selected="false" data-tab="years">年度大事</button>
+      <button class="tab" role="tab" id="tab-look" aria-controls="p-look" aria-selected="false" data-tab="look">外观</button>
     </div>
     <span class="save-state" id="save-state" data-s="idle" role="status"><i class="dot"></i><span id="save-text">正在连接存储…</span></span>
   </div>
@@ -422,7 +568,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
         <button class="btn" type="button" id="wk-prev" aria-label="上一周">‹ 上一周</button>
         <span class="wk-range" id="wk-range"></span>
         <button class="btn" type="button" id="wk-next" aria-label="下一周">下一周 ›</button>
-        <button class="btn" type="button" id="wk-today">本周</button>
+        <button class="btn" type="button" id="wk-today">今天</button>
         <input type="date" id="wk-jump" aria-label="跳到某一周">
       </div>
     </div>
@@ -499,6 +645,30 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     <div class="ypick" id="ypick" aria-label="选择年份"></div>
     <div id="ydetail"></div>
   </section>
+  <!-- ===== Appearance ===== -->
+  <section class="panel" id="p-look" role="tabpanel" aria-labelledby="tab-look" hidden>
+    <header class="top">
+      <div>
+        <h2 class="h1">外观</h2>
+        <p class="lede">两种风格，各有浅色和深色。默认跟随系统设置自动切换，也可以在这里固定一种。下面左右并排显示当前风格的浅色和深色。</p>
+      </div>
+    </header>
+    <div class="look-ctl">
+      <div class="grp"><span id="lk-skin-l">风格</span>
+        <div class="seg-ctl" role="group" aria-labelledby="lk-skin-l">
+          <button type="button" data-skin="sys">系统</button><button type="button" data-skin="min">极简</button>
+        </div></div>
+      <div class="grp"><span id="lk-mode-l">外观</span>
+        <div class="seg-ctl" role="group" aria-labelledby="lk-mode-l">
+          <button type="button" data-mode="auto">自动</button><button type="button" data-mode="light">浅色</button><button type="button" data-mode="dark">深色</button>
+        </div></div>
+    </div>
+    <div class="pv-row">
+      <div class="pv pv-light" id="pv-light"></div>
+      <div class="pv pv-dark" id="pv-dark"></div>
+    </div>
+    <p class="look-note" id="look-note"></p>
+  </section>
 </div>
 
 <div class="modal-back" id="ye-modal" hidden>
@@ -515,7 +685,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     <div class="acts">
       <button class="btn danger" type="button" id="ye-del">删除</button>
       <button class="btn" type="button" id="ye-cancel">取消</button>
-      <button class="btn primary" type="submit">保存</button>
+      <button class="btn primary" type="submit">完成</button>
     </div>
   </form>
 </div>
@@ -539,7 +709,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       <button class="btn danger" type="button" id="ev-del">删除</button>
       <button class="btn" type="button" id="ev-backlog">移回待排期</button>
       <button class="btn" type="button" id="ev-cancel">取消</button>
-      <button class="btn primary" type="submit">保存</button>
+      <button class="btn primary" type="submit">完成</button>
     </div>
   </form>
 </div>
@@ -654,7 +824,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   }
 
   // ================= Tabs =================
-  const TABS = ["month", "week", "years"];
+  const TABS = ["month", "week", "years", "look"];
   function showTab(name) {
     if (!TABS.includes(name)) name = "month";
     TABS.forEach(t => {
@@ -664,12 +834,13 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     pref.set("tab", name);
     try { history.replaceState(null, "", "#" + name); } catch {}
     if (name === "years") renderYears();
+    if (name === "look") renderLook();
   }
   $(".tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) showTab(b.dataset.tab); });
   $(".tabs").addEventListener("keydown", e => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
     const i = TABS.indexOf(document.activeElement.dataset.tab); if (i < 0) return;
-    const n = TABS[(i + (e.key === "ArrowRight" ? 1 : 2)) % 3]; showTab(n); $(`#tab-${n}`).focus();
+    const n = TABS[(i + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length]; showTab(n); $(`#tab-${n}`).focus();
   });
 
   // ================= Month view =================
@@ -1233,7 +1404,8 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   async function drawTimeline() {
     const FONT = '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
     try { await Promise.all([document.fonts.load(`700 34px ${FONT}`, "周工作计划时间轴"), document.fonts.load(`400 15px ${FONT}`, ws.items.map(i => i.title).join("") || "无")]); } catch {}
-    const C = { bg: "#ffffff", ink: "#36454f", muted: "#5f6d7a", line: "#d3d3d3", bar: "#708090", ok: "#4f7d64", warn: "#a8823a" };
+    const pv = getComputedStyle($("#pv-light")), tk = n => pv.getPropertyValue(n).trim();
+    const C = { bg: "#ffffff", ink: tk("--ink") || "#36454f", muted: tk("--muted") || "#5f6d7a", line: tk("--line") || "#d3d3d3", bar: tk("--tl") || "#708090", ok: tk("--ok") || "#4f7d64", warn: tk("--warn") || "#a8823a" };
     const days = weekDays();
     const W = 1600, PAD = 48, colW = (W - PAD * 2) / 7, LH = 30;
     const lists = days.map(d => ws.items.filter(i => i.date === d).sort(sortItems));
@@ -1805,6 +1977,58 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     touch(yPath(y)); yeLastFocus = null; closeYE();
   });
 
+
+  // ================= Appearance (two design systems × light/dark) =================
+  const rootEl = document.documentElement;
+  const look = { skin: rootEl.classList.contains("sk-sys") ? "sys" : "min", mode: ["light", "dark"].includes(rootEl.dataset.mode) ? rootEl.dataset.mode : "auto" };
+  const SWATCHES = [
+    ["--accent", "强调色", "systemBlue"], ["--ok", "已完成", "systemGreen"], ["--warn", "进行中", "systemOrange"],
+    ["--bad", "今天 · 删除", "systemRed"], ["--star", "里程碑", "systemOrange"], ["--c-study", "学业·考试", "systemBlue"],
+    ["--c-work", "实习·工作", "systemIndigo"], ["--c-life", "生活", "systemGreen"], ["--bg", "页面背景", "systemGroupedBackground"],
+    ["--surface", "卡片", "secondarySystemGroupedBackground"], ["--ink", "主要文字", "label"], ["--muted", "次要文字", "secondaryLabel"],
+    ["--line", "分隔线", "opaqueSeparator"],
+  ];
+  function pvContent(frame, label) {
+    const mock = h("div", { "aria-hidden": "true", style: "display:flex;flex-direction:column;gap:14px", inert: true },
+      h("div", { class: "tabs", style: "align-self:flex-start" }, ["月度", "周日程", "年度"].map((t, i) => h("span", { class: "tab", "aria-selected": String(i === 0), text: t }))),
+      h("h4", {}, "6 月", h("small", { text: "2028 年 · 30 天 · 目标：通过 CPA 全部四门" })),
+      h("div", { class: "pv-list" }, [["REG 考试", "6/15 前", true], ["Discipline 出分", "6/16", false], ["REG 出分", "6/27", false]].map(([t, d, c]) => {
+        const cb = h("input", { type: "checkbox", class: "pv-check", tabindex: "-1" }); cb.checked = c;
+        return h("div", {}, cb, h("span", { text: t }), h("span", { class: "pv-sub", text: d }));
+      })),
+      h("div", { class: "pv-bars" },
+        h("span", { style: "--c:var(--c-work);grid-column:1/4;grid-row:1", text: "实习" }),
+        h("span", { style: "--c:var(--c-study);grid-column:4/7;grid-row:2", text: "备考 REG" }),
+        h("span", { style: "--c:var(--c-life);grid-column:7/10;grid-row:1", text: "暑假" }),
+        h("span", { style: "--c:var(--c-other);grid-column:9/13;grid-row:3", text: "补考预留" })),
+      h("div", { class: "pv-acts" }, h("span", { class: "btn primary", text: "完成" }), h("span", { class: "btn", text: "编辑" }), h("span", { class: "btn danger", text: "删除" }),
+        h("span", { class: "sp" }), (() => { const s = h("input", { type: "checkbox", class: "pv-switch", tabindex: "-1" }); s.checked = true; return s; })()));
+    const sw = h("div", { class: "pv-sw" });
+    frame.replaceChildren(h("div", { class: "pv-top" }, h("b", { text: label }), h("span", { text: look.skin === "sys" ? "系统风格" : "极简风格" })), mock, sw);
+    const cs = getComputedStyle(frame);
+    sw.replaceChildren(...SWATCHES.map(([v, l, n]) => h("div", {}, h("i", { style: `background:var(${v})` }),
+      h("span", {}, l, h("small", { text: (look.skin === "sys" ? n + " · " : "") + cs.getPropertyValue(v).trim().toUpperCase() })))));
+  }
+  function renderLook() {
+    $$("#p-look [data-skin]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.skin === look.skin)));
+    $$("#p-look [data-mode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === look.mode)));
+    pvContent($("#pv-light"), "浅色"); pvContent($("#pv-dark"), "深色");
+    $("#look-note").textContent = look.skin === "sys"
+      ? "系统风格参考苹果《人机界面指南》：iOS 系统颜色（浅色 systemBlue #007AFF、深色 #0A84FF 等）、分组背景、label 与 secondaryLabel 文字层级、分段控件、开关和圆形勾选框。在苹果设备上用系统自带的苹方和 SF 字体显示，其他设备退回思源黑体。"
+      : "极简风格来自 theme-factory 的 Modern Minimalist：炭灰 #36454F、石板灰 #708090、浅灰 #D3D3D3 和白色，深色外观由同一组颜色推出。";
+  }
+  function applyLook() {
+    rootEl.classList.toggle("sk-sys", look.skin === "sys");
+    if (look.mode === "auto") delete rootEl.dataset.mode; else rootEl.dataset.mode = look.mode;
+    pref.set("skin", look.skin); pref.set("mode", look.mode);
+    renderLook();
+    if (vt) requestAnimationFrame(() => vt.redraw());
+  }
+  $("#p-look").addEventListener("click", e => {
+    const s = e.target.closest("[data-skin]"), m = e.target.closest("[data-mode]");
+    if (s) { look.skin = s.dataset.skin; applyLook(); }
+    else if (m) { look.mode = m.dataset.mode; applyLook(); }
+  });
 
   // ================= Boot =================
   async function initStorage() {
