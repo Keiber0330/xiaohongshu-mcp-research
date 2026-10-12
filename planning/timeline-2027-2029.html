@@ -1776,7 +1776,9 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
 
   // vis-timeline is loaded on demand from cdnjs; the month grid below is the fallback while it loads or if it can't.
   let visState = "idle";   // idle | loading | ready | failed
+  let visError = "";       // why the interactive timeline was given up, shown above the fallback grid
   function loadVis() {
+    if (visState === "failed") return;   // a fallback stays for this visit
     if (window.vis?.Timeline && window.vis?.DataSet) { visState = "ready"; return; }
     if (visState !== "idle") return;
     visState = "loading";
@@ -1945,11 +1947,37 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       if (ydEl.firstChild !== ydTop) ydEl.replaceChildren(ydTop, vtBox, vtDetail, ydBottom);
       ydTop.replaceChildren(head, all, filters);
       ydBottom.replaceChildren(listEl || h("p", { class: "vt-tip", text: `${y} 年还没有按月记录的大事。双击时间轴空白处，或点「＋ 添加大事」开始。` }));
-      if (!fromScroll) renderVis(y);
       renderVtDetail();
+      if (!fromScroll) {
+        try { renderVis(y); } catch (err) { return giveUpVis(err); }
+        checkVisDrawn();
+      }
       return;
     }
-    ydEl.replaceChildren(head, all, renderYearGrid(y, evs, ms));
+    ydEl.replaceChildren(head, all,
+      visError ? h("p", { class: "vt-tip vt-fallback", text: `交互时间轴在这里没能显示（${visError}），先用按月分栏的视图。` }) : null,
+      renderYearGrid(y, evs, ms));
+  }
+  // If the timeline component throws, or builds but never draws (seen in some app viewers), fall back to the
+  // month grid instead of leaving an empty area.
+  function giveUpVis(err) {
+    if (visState === "failed") return;
+    visState = "failed";
+    visError = String(err?.message || err || "未知原因").slice(0, 120);
+    console.error("year timeline fallback:", err);
+    try { vt?.destroy(); } catch {}
+    vt = null; ydEl.replaceChildren();
+    renderYears();
+  }
+  let visCheck = 0;
+  function checkVisDrawn() {
+    clearTimeout(visCheck);
+    visCheck = setTimeout(() => {
+      if (visState !== "ready" || $("#p-years").hidden || !vtBox.isConnected) return;
+      const root = vtBox.querySelector(".vis-timeline");
+      const labels = vtBox.querySelectorAll(".vis-time-axis .vis-text.vis-minor").length;
+      if (!root || root.offsetHeight < 40 || root.offsetWidth < 40 || labels < 2) giveUpVis(new Error(!root ? "组件没有生成" : "组件没有画出内容"));
+    }, 1500);
   }
   function renderYearGrid(y, evs, ms) {
     const singles = evs.filter(e => e.month && !(e.end > e.month));
