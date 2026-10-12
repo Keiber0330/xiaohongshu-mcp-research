@@ -595,6 +595,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
               <label style="font-size:12.5px;color:var(--muted);display:inline-flex;gap:5px;align-items:center"><input type="checkbox" id="gc-auto" style="accent-color:var(--accent)"> 打开时自动同步</label>
             </div>
             <span class="imp-msg" id="gc-msg" role="status"></span>
+            <button class="btn" type="button" id="gc-perm" hidden>打开权限设置</button>
             <p>直接读取你连接的 Google 日历（主日历）。重复同步只更新日历来的日程，你标的状态会保留。</p>
             <p style="border-top:1px dashed var(--line);padding-top:8px">也可以导入日历文件：选择从 Google 日历导出的 <b>.zip</b> 或 <b>.ics</b>。</p>
             <div class="row">
@@ -1499,7 +1500,30 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   const syncBtn = $("#gc-sync"), syncAuto = $("#gc-auto");
   syncAuto.checked = pref.get("gcauto", "0") === "1";
   syncAuto.addEventListener("change", () => pref.set("gcauto", syncAuto.checked ? 1 : 0));
-  let mcpNs;   // undefined = not asked yet, null = unavailable here
+  let mcpNs = null;   // asked again on every attempt: availability is per view and can change
+  // Why live sync can't run here, told apart so the message names the fix.
+  async function gcalReady() {
+    const c = window.claude;
+    if (!c?.use) return { why: "copy" };
+    if (!mcpNs) mcpNs = await c.use("mcp").catch(() => null);
+    const perms = await c.use("permissions").catch(() => null);
+    const st = perms ? await perms.state("mcp:" + GCAL).catch(() => "unavailable") : "unavailable";
+    if (st === "denied") return { why: "denied", perms };
+    if (!mcpNs) return { why: store.db ? "surface" : "standalone" };
+    return { ok: true };
+  }
+  const GC_WHY = {
+    copy: "这是页面的本地副本，连不上你的账号。请打开 claude.ai 上这个页面的链接再同步。",
+    standalone: "页面现在是单独打开的，不在 claude.ai 里，所以读不了日历。请在 claude.ai 里打开这个页面再同步。",
+    surface: "当前的打开方式（例如 Claude 手机或桌面应用里的预览）还不支持读取日历。请用电脑浏览器打开 claude.ai 上的这个页面来同步，同步好的日程会自动出现在这里。",
+    denied: "这个页面读取 Google 日历的权限被关掉了。点「打开权限设置」把 Google Calendar 打开，再点「同步本周」。",
+  };
+  const permBtn = $("#gc-perm");
+  let permNs = null;
+  permBtn.addEventListener("click", async () => {
+    try { await permNs?.manage(); permBtn.hidden = true; gcMsg("", "权限设置已关闭，再点一次「同步本周」试试。"); }
+    catch { gcMsg("error", "权限面板打不开。请从页面右上角的菜单进入权限设置，打开 Google Calendar。"); }
+  });
   const gcMsg = (s, t) => { const el = $("#gc-msg"); el.dataset.s = s; el.textContent = t; };
   function gcalToItems(events, from, to) {
     const out = [];
@@ -1508,7 +1532,10 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       if (!e || e.status === "cancelled" || !e.start) continue;
       const title = String(e.summary || "（无标题）").slice(0, 120), id = String(e.id || title);
       if (e.start.date) {   // all-day: end.date is exclusive
-        let d = parseYmd(e.start.date); const end = e.end?.date ? parseYmd(e.end.date) : addDays(d, 1);
+        // the connector sometimes sends "2026-10-20T00:00:00Z" here; the first 10 characters are the date
+        let d = parseYmd(String(e.start.date).slice(0, 10)); let end = e.end?.date ? parseYmd(String(e.end.date).slice(0, 10)) : addDays(d, 1);
+        if (isNaN(d)) continue;
+        if (!(end > d)) end = addDays(d, 1);
         for (; d < end; d = addDays(d, 1)) if (d >= from && d < to) out.push({ key: "g:" + id + "|" + ymd(d), title, date: ymd(d), start: "", end: "" });
       } else if (e.start.dateTime) {
         const s = new Date(e.start.dateTime), en = e.end?.dateTime ? new Date(e.end.dateTime) : null;
@@ -1520,8 +1547,9 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   }
   async function syncGcal(manual) {
     if (store.mode === "pending" || store.mode === "readonly") { if (manual) gcMsg("error", store.mode === "readonly" ? "只读模式下不能同步。" : "存储还没连上，稍等几秒再试。"); return; }
-    if (mcpNs === undefined) mcpNs = window.claude?.use ? await window.claude.use("mcp").catch(() => null) : null;
-    if (!mcpNs) { if (manual) gcMsg("error", "这里用不了实时同步。可以改用下面的文件导入。"); return; }
+    const ready = await gcalReady();
+    permBtn.hidden = ready.why !== "denied"; permNs = ready.perms || null;
+    if (!ready.ok) { if (manual || ready.why === "denied") gcMsg("error", GC_WHY[ready.why]); return; }
     const monday = new Date(wkMonday), from = monday, to = addDays(monday, 7);
     const wk = ymd(monday);
     syncBtn.disabled = true; gcMsg("", "正在读取 Google 日历…");
@@ -1548,7 +1576,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       const c = e?.code;
       const msg = c === "server_not_connected" ? "还没连接 Google 日历：到 claude.ai 设置 → 连接器里添加 Google Calendar。"
         : c === "needs_reauth" ? "Google 日历的授权过期了：到 claude.ai 设置 → 连接器里重新连接。"
-        : c === "not_in_manifest" ? "这个页面读取日历的权限被关掉了，可以在页面的权限菜单里重新打开。"
+        : c === "not_in_manifest" ? GC_WHY.denied
         : c === "approval_required" || c === "consent_required" ? "需要你允许这个页面读取日历，点「同步本周」再试一次。"
         : c === "selection_required" ? "你有多个 Google 日历连接，先在弹出的提示里选一个。"
         : c === "server_unavailable" ? "Google 日历暂时连不上，过一会儿再试。"
