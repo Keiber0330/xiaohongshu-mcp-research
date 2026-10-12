@@ -417,6 +417,9 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
 .vt .vis-item.vis-point.ms-item .vis-item-content { font-weight: 700; }
 .vt .vis-item.vis-selected { border-color: var(--ink); outline: 2px solid var(--ink); outline-offset: 0; z-index: 2; }
 .vt .vis-item.vis-range .vis-drag-left, .vt .vis-item.vis-range .vis-drag-right { width: 10px; }
+.vt .vis-item.vis-background.yr-bg { background: transparent; border: 0; }
+.vt .vis-item.vis-background.yr-alt { background: color-mix(in srgb, var(--fill) 55%, transparent); }
+.vt .vis-time-axis .vis-grid.vis-major { border-width: 2px; }
 .vt .vis-current-time { background-color: var(--bad); width: 2px; }
 .vt div.vis-tooltip { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; font-family: var(--body); font-size: 12.5px; box-shadow: none; padding: 6px 9px; }
 .vt-detail { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 10px; min-height: 34px; font-size: 13px; }
@@ -639,7 +642,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     <header class="top">
       <div>
         <h2 class="h1">年度大事记</h2>
-        <p class="lede">先选一年，下面是这一年 1–12 月的时间轴，按类别分行。可以拖动横条换月份、拖两端改起止，按住 Ctrl 滚动缩放。月度时间轴里标了星的月份会作为里程碑出现。</p>
+        <p class="lede">在时间轴上滚动鼠标滚轮，可以在年份之间左右移动，滚到哪一年，上面的年份和下面的列表就切到哪一年；也可以直接点年份跳过去。拖动横条换月份（能拖进下一年），拖两端改起止，按住 Ctrl 滚动缩放。月度时间轴里标了星的月份会作为里程碑出现。</p>
       </div>
       <div class="stats"><div class="stat"><b id="yr-count">0</b><span>已记录大事</span></div><div class="stat"><b id="yr-span">—</b><span>可选年份</span></div></div>
     </header>
@@ -1739,7 +1742,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   const msBtn = m => { const b = h("button", { class: "ms", type: "button", "data-goto": m.key, title: "在月度时间轴里查看" }); b.innerHTML = STAR; b.append(h("span", { text: m.label })); return b; };
   const addInput = (y, m) => h("input", { class: "add-input", type: "text", maxlength: "200", id: `ya-${y}-${m}`, "data-month": String(m), placeholder: m ? "+ 添加" : "+ 添加全年目标", "aria-label": m ? `为 ${y} 年 ${m} 月添加大事` : `为 ${y} 年添加全年目标`, autocomplete: "off" });
 
-  function renderYears() {
+  function renderYears(opts) {
     const ae = document.activeElement;
     if (yPanel.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
     if (!(ySel >= yrRange.from && ySel <= yrRange.to)) ySel = now.getFullYear() >= yrRange.from && now.getFullYear() <= yrRange.to ? now.getFullYear() : yrRange.from;
@@ -1757,7 +1760,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     if (focusedY) ypickEl.querySelector(`[data-y="${focusedY}"], [data-ext="${focusedY}"]`)?.focus();
     $("#yr-count").textContent = total;
     $("#yr-span").textContent = `${yrRange.to - yrRange.from + 1} 年`;
-    renderYearDetail(ySel);
+    renderYearDetail(ySel, !!opts?.fromScroll);
   }
 
   // Categories become timeline lanes (timeline-generator skill: color-coded groups + filter buttons + legend).
@@ -1780,83 +1783,131 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     s.onerror = () => { visState = "failed"; renderYears(); };
     document.head.append(s);
   }
-  const vtBox = h("div", { class: "vt", id: "vt", "aria-label": "年度时间轴，可拖动和缩放" });
+  const vtBox = h("div", { class: "vt", id: "vt", "aria-label": "年度时间轴：滚动鼠标滚轮左右移动，按住 Ctrl 滚动缩放" });
+  const ydTop = h("div"), ydBottom = h("div");
+  // One continuous strip across every year in range; vis item ids are "<year>:<event id>".
   let vt = null, vtItems = null, vtGroups = null, vtYear = null, vtSel = null;
   const monthStart = d => new Date(d.getFullYear(), d.getMonth() + (d.getDate() > 15 ? 1 : 0), 1);
+  const vid = (y, id) => `${y}:${id}`;
+  const splitVid = v => { const i = String(v).indexOf(":"); return [+String(v).slice(0, i), String(v).slice(i + 1)]; };
+  const clampMonth = (d, y) => d.getFullYear() < y ? 1 : d.getFullYear() > y ? 12 : d.getMonth() + 1;
   function ensureVis() {
     if (vt) return;
     vtItems = new vis.DataSet(); vtGroups = new vis.DataSet();
     vt = new vis.Timeline(vtBox, vtItems, vtGroups, {
       orientation: "top", stack: true, minHeight: 240, groupOrder: "order",
+      // an explicit start/end stops vis from auto-fitting the view to every year's data on first load
+      start: new Date(ySel, 0, 1), end: new Date(ySel + 1, 0, 1),
       margin: { item: { horizontal: 4, vertical: 8 }, axis: 10 },
-      zoomMin: 1000 * 60 * 60 * 24 * 40, zoomMax: 1000 * 60 * 60 * 24 * 370,
-      zoomKey: "ctrlKey", horizontalScroll: true, showCurrentTime: true,
+      zoomMin: 1000 * 60 * 60 * 24 * 40, zoomMax: 1000 * 60 * 60 * 24 * 740,
+      zoomKey: "ctrlKey", horizontalScroll: false, showCurrentTime: true,
       editable: { add: store.mode !== "readonly", updateTime: store.mode !== "readonly", updateGroup: store.mode !== "readonly", remove: false },
       snap: date => monthStart(date),
       tooltip: { followMouse: true, overflowMethod: "cap" },
       format: {
-        minorLabels: { millisecond: "SSS", second: "s", minute: "HH:mm", hour: "HH:mm", weekday: "D日", day: "D日", week: "D日", month: "M月", year: "YYYY" },
+        minorLabels: { millisecond: "SSS", second: "s", minute: "HH:mm", hour: "HH:mm", weekday: "D日", day: "D日", week: "D日", month: "M月", year: "YYYY年" },
         majorLabels: { millisecond: "HH:mm:ss", second: "M月D日 HH:mm", minute: "M月D日", hour: "M月D日", weekday: "M月", day: "M月", week: "M月", month: "YYYY年", year: "" },
       },
-      onAdd: (item, cb) => { cb(null); if (store.mode === "readonly") return; openYENew(ySel, Math.min(12, item.start.getMonth() + 1), CAT_IDS.includes(item.group) ? item.group : "other"); },
+      onAdd: (item, cb) => {
+        cb(null); if (store.mode === "readonly") return;
+        const y = item.start.getFullYear();
+        if (y < yrRange.from || y > yrRange.to) return;
+        openYENew(y, item.start.getMonth() + 1, CAT_IDS.includes(item.group) ? item.group : "other");
+      },
       onMove: (item, cb) => {
         cb(null);
-        const s = yrState[ySel], ev = s?.events.find(x => x.id === item.id); if (!ev) return renderYears();
-        const clampM = d => d.getFullYear() < ySel ? 1 : d.getFullYear() > ySel ? 12 : d.getMonth() + 1;
-        const span = (ev.end || ev.month) - ev.month;
-        const movedStart = Math.abs(monthStart(item.start) - new Date(ySel, ev.month - 1, 1)) > 864e5;
-        const movedEnd = Math.abs(monthStart(item.end) - new Date(ySel, ev.end || ev.month, 1)) > 864e5;
-        const m1 = clampM(monthStart(item.start));
-        // a drag moves both edges and keeps the month count (vis keeps milliseconds, and months differ in length)
-        const m2 = movedStart && movedEnd ? Math.min(12, m1 + span) : clampM(new Date(monthStart(item.end).getTime() - 864e5));
+        const [oy, id] = splitVid(item.id), ev = yrState[oy]?.events.find(x => x.id === id);
+        if (!ev) return renderYears();
+        const st = monthStart(item.start), en = monthStart(item.end), span = (ev.end || ev.month) - ev.month;
+        const movedStart = Math.abs(st - new Date(oy, ev.month - 1, 1)) > 864e5;
+        const movedEnd = Math.abs(en - new Date(oy, ev.end || ev.month, 1)) > 864e5;
+        let ny = oy, m1, m2;
+        if (movedStart && movedEnd) {
+          // a drag moves both edges: keep the month count, and let the bar cross into another year
+          ny = Math.min(yrRange.to, Math.max(yrRange.from, st.getFullYear()));
+          m1 = clampMonth(st, ny); m2 = Math.min(12, m1 + span);
+        } else {   // a resize stays inside the event's own year
+          m1 = clampMonth(st, oy); m2 = clampMonth(new Date(en.getTime() - 864e5), oy);
+        }
         ev.month = m1; ev.end = m2 > m1 ? m2 : 0;
         if (CAT_IDS.includes(item.group)) ev.cat = item.group;
-        touch(yPath(ySel)); vtSel = ev.id; renderYears();
+        if (ny !== oy) { yrState[oy].events = yrState[oy].events.filter(x => x !== ev); ensureYear(ny).events.push(ev); touch(yPath(ny)); }
+        touch(yPath(oy)); vtSel = vid(ny, ev.id); renderYears();
       },
-      onUpdate: (item, cb) => { cb(null); if (!String(item.id).startsWith("ms:")) openYE(ySel, item.id); },
+      onUpdate: (item, cb) => { cb(null); if (!String(item.id).startsWith("ms:") && !String(item.id).startsWith("bg:")) { const [y, id] = splitVid(item.id); openYE(y, id); } },
     });
     vt.on("select", p => { vtSel = p.items[0] || null; renderVtDetail(); });
     vt.on("click", p => { if (p.item && String(p.item).startsWith("ms:")) { showTab("month"); requestAnimationFrame(() => jumpTo("m-" + String(p.item).slice(3))); } });
+    // The year in the middle of the view becomes the selected year (heading, chips, list follow the scroll).
+    // Only the viewer's own scrolling or dragging does this; a chosen year's animated jump does not.
+    const followCenter = (start, end) => {
+      const y = new Date((start.getTime() + end.getTime()) / 2).getFullYear();
+      if (y !== ySel && y >= yrRange.from && y <= yrRange.to) { ySel = y; vtYear = y; pref.set("ysel", y); renderYears({ fromScroll: true }); }
+    };
+    vt.on("rangechange", p => { if (p.byUser) followCenter(p.start, p.end); });
+    // Plain mouse wheel (or a trackpad swipe) pans left/right through the years; Ctrl + wheel is left to vis for zooming.
+    vtBox.addEventListener("wheel", e => {
+      if (e.ctrlKey || e.metaKey) return;
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (!d) return;
+      e.preventDefault(); e.stopPropagation();
+      const w = vt.getWindow(), span = w.end - w.start;
+      const px = e.deltaMode === 1 ? d * 16 : e.deltaMode === 2 ? d * vtBox.clientWidth : d;
+      const min = new Date(yrRange.from, 0, 1).getTime(), max = new Date(yrRange.to + 1, 0, 1).getTime();
+      let s = w.start.getTime() + span * px / Math.max(400, vtBox.clientWidth);
+      s = Math.max(min, Math.min(max - span, s));
+      vt.setWindow(s, s + span, { animation: false });
+      followCenter(new Date(s), new Date(s + span));
+    }, { capture: true, passive: false });
   }
-  function renderVis(y, evs, ms) {
+  function renderVis(y) {
     ensureVis();
     const groups = [];
-    if (ms.length) groups.push({ id: "ms", content: "★ 里程碑", order: 0, className: "g-ms" });
+    const allMs = [];
+    for (let yy = yrRange.from; yy <= yrRange.to; yy++) milestonesOf(yy).forEach(m => allMs.push({ ...m, y: yy }));
+    if (allMs.length) groups.push({ id: "ms", content: "★ 里程碑", order: 0, className: "g-ms" });
     CATS.forEach(([id, label], i) => groups.push({ id, content: esc(label), order: i + 1, className: "g-" + id, visible: catOn[id] }));
-    const items = evs.filter(e => e.month && e.text.trim()).map(e => ({
-      id: e.id, group: e.cat, type: "range", className: "cat-" + e.cat,
-      start: new Date(y, e.month - 1, 1), end: new Date(y, e.end || e.month, 1),
-      content: esc(e.text), title: esc(`${rangeLabel(e)} · ${catLabel(e.cat)}：${e.text}`),
-    })).concat(ms.map(m => ({
+    const items = [];
+    for (let yy = yrRange.from; yy <= yrRange.to; yy++) {
+      items.push({ id: "bg:" + yy, type: "background", start: new Date(yy, 0, 1), end: new Date(yy + 1, 0, 1), className: "yr-bg" + (yy % 2 ? " yr-alt" : ""), content: "" });
+      (yrState[yy]?.events || []).filter(e => e.month && e.text.trim()).forEach(e => items.push({
+        id: vid(yy, e.id), group: e.cat, type: "range", className: "cat-" + e.cat,
+        start: new Date(yy, e.month - 1, 1), end: new Date(yy, e.end || e.month, 1),
+        content: esc(e.text), title: esc(`${yy} 年 ${rangeLabel(e)} · ${catLabel(e.cat)}：${e.text}`),
+      }));
+    }
+    allMs.forEach(m => items.push({
       id: "ms:" + m.key, group: "ms", type: "point", className: "ms-item", editable: false,
-      start: new Date(y, m.month - 1, 1),
-      content: esc(m.label), title: esc(`${m.month} 月里程碑：${m.label}（点击跳到月度时间轴）`),
-    })));
+      start: new Date(m.y, m.month - 1, 1),
+      content: esc(m.label), title: esc(`${m.y} 年 ${m.month} 月里程碑：${m.label}（点击跳到月度时间轴）`),
+    }));
     vtGroups.clear(); vtGroups.add(groups);
     vtItems.clear(); vtItems.add(items);
+    vt.setOptions({ min: new Date(yrRange.from, 0, 1), max: new Date(yrRange.to + 1, 0, 1) });
     if (vtYear !== y) {
-      vt.setOptions({ min: new Date(y, 0, 1), max: new Date(y + 1, 0, 1) });
-      // narrow screens open on four months (from the first dated event) and swipe through the rest
+      // a chosen year (chip, ‹ › buttons, first open) brings that whole year into view; narrow screens show four months
       const narrow = (vtBox.clientWidth || ydEl.clientWidth) < 640;
+      const evs = yrState[y]?.events || [], ms = milestonesOf(y);
       const first = Math.min(9, ...evs.filter(e => e.month && e.text.trim()).map(e => e.month), ...ms.map(m => m.month), 12) - 1;
       const a = narrow ? new Date(y, Math.max(0, first), 1) : new Date(y, 0, 1);
-      vt.setWindow(a, narrow ? new Date(y, Math.max(0, first) + 4, 1) : new Date(y + 1, 0, 1), { animation: false });
-      vtYear = y; vtSel = null;
+      vt.setWindow(a, narrow ? new Date(y, Math.max(0, first) + 4, 1) : new Date(y + 1, 0, 1), { animation: vtYear !== null });
+      vtYear = y;
     }
     if (vtSel && vtItems.get(vtSel)) vt.setSelection([vtSel]); else vtSel = null;
     requestAnimationFrame(() => vt.redraw());
   }
   const vtDetail = h("div", { class: "vt-detail", "aria-live": "polite" });
   function renderVtDetail() {
-    const ev = vtSel && yrState[ySel]?.events.find(x => x.id === vtSel);
-    if (!ev) { vtDetail.replaceChildren(h("span", { class: "vt-tip", text: store.mode === "readonly" ? "点横条查看详情。滚轮横向拖动，按住 Ctrl 再滚动缩放。" : "点横条查看详情；拖动横条换月份，拖两端改起止；双击空白处添加。按住 Ctrl 滚动可以缩放。" })); return; }
+    const [sy, sid] = vtSel ? splitVid(vtSel) : [0, ""];
+    const ev = vtSel && yrState[sy]?.events.find(x => x.id === sid);
+    if (!ev) { vtDetail.replaceChildren(h("span", { class: "vt-tip", text: store.mode === "readonly" ? "滚动鼠标滚轮左右移动，可以一直滚到下一年；按住 Ctrl 滚动缩放。点横条查看详情。" : "滚动鼠标滚轮左右移动，可以一直滚到下一年；按住 Ctrl 滚动缩放。点横条查看详情，拖动横条换月份（可拖到下一年），拖两端改起止，双击空白处添加。" })); return; }
     vtDetail.replaceChildren(
       h("i", { class: "sw", style: `background:var(--c-${ev.cat})` }),
-      h("b", { text: rangeLabel(ev) }), h("span", { class: "vt-cat", text: catLabel(ev.cat) }),
+      h("b", { text: `${sy} 年 ${rangeLabel(ev)}` }), h("span", { class: "vt-cat", text: catLabel(ev.cat) }),
       h("span", { class: "vt-text", text: ev.text }),
-      store.mode === "readonly" ? null : h("button", { class: "btn", type: "button", "data-ev": ev.id, text: "编辑" }));
+      store.mode === "readonly" ? null : h("button", { class: "btn", type: "button", "data-ev": ev.id, "data-evy": String(sy), text: "编辑" }));
   }
-  function renderYearDetail(y) {
+  function renderYearDetail(y, fromScroll) {
     const s = ensureYear(y);
     const evs = s.events;
     const whole = evs.filter(e => !e.month);
@@ -1880,8 +1931,11 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       const list = evs.filter(e => e.month && e.text.trim()).sort((a, b) => a.month - b.month || (a.end || a.month) - (b.end || b.month));
       const listEl = list.length ? h("ol", { class: "vt-list", "aria-label": `${y} 年大事列表` }, list.map(e => h("li", {},
         h("button", { type: "button", "data-ev": e.id }, h("i", { class: "sw", style: `background:var(--c-${e.cat})` }), h("em", { text: rangeLabel(e) }), h("span", { text: e.text }))))) : null;
-      ydEl.replaceChildren(head, all, filters, vtBox, vtDetail, listEl || h("p", { class: "vt-tip", text: "这一年还没有按月记录的大事。双击时间轴空白处，或点「＋ 添加大事」开始。" }));
-      renderVis(y, evs, ms);
+      // the timeline element stays in place (moving it would interrupt a scroll or drag in progress)
+      if (ydEl.firstChild !== ydTop) ydEl.replaceChildren(ydTop, vtBox, vtDetail, ydBottom);
+      ydTop.replaceChildren(head, all, filters);
+      ydBottom.replaceChildren(listEl || h("p", { class: "vt-tip", text: `${y} 年还没有按月记录的大事。双击时间轴空白处，或点「＋ 添加大事」开始。` }));
+      if (!fromScroll) renderVis(y);
       renderVtDetail();
       return;
     }
@@ -1936,7 +1990,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     if (cat) { const id = cat.dataset.cat; catOn[id] = !catOn[id]; pref.set("cat-" + id, catOn[id] ? 1 : 0); renderYears(); return; }
     if (e.target.closest("[data-new]")) { openYENew(ySel, ySel === now.getFullYear() ? now.getMonth() + 1 : 1, "other"); return; }
     const ev = e.target.closest("[data-ev]");
-    if (ev && store.mode !== "readonly") openYE(ySel, ev.dataset.ev);
+    if (ev && store.mode !== "readonly") openYE(ev.dataset.evy ? +ev.dataset.evy : ySel, ev.dataset.ev);
   });
   ydEl.addEventListener("keydown", e => {
     const t = e.target;
@@ -1996,7 +2050,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     const text = $("#ye-text").value.trim(); if (!text) return $("#ye-text").focus();
     const month = +$("#ye-from").value, to = +$("#ye-to").value, ny = +$("#ye-year").value || y;
     Object.assign(ev, { text, month, end: month && to > month ? to : 0, cat: $("#ye-cat").value || "other" });
-    delete ev.fresh; vtSel = ev.id;
+    delete ev.fresh; vtSel = `${$("#ye-year").value || y}:${ev.id}`;
     if (ny !== y) {
       yrState[y].events = yrState[y].events.filter(x => x !== ev);
       ensureYear(ny).events.push(ev);
