@@ -2220,7 +2220,8 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     cat: CAT_IDS.includes(d?.cat) ? d.cat : "other", kind: String(d?.kind || "").slice(0, 20), why: String(d?.why || "").slice(0, 400),
     suggest: RV_TARGETS[d?.suggest] ? d.suggest : "week", status: ["pending", "approved", "rejected"].includes(d?.status) ? d.status : "pending",
     from: String(d?.from || "").slice(0, 120), subject: String(d?.subject || "").slice(0, 200), receivedAt: String(d?.receivedAt || ""),
-    threadId: /^[\w-]{1,80}$/.test(d?.threadId || "") ? d.threadId : "", addedTo: String(d?.addedTo || ""), decidedAt: String(d?.decidedAt || ""),
+    threadId: /^[\w-]{1,80}$/.test(d?.threadId || "") ? d.threadId : "",
+    link: /^https:\/\/mail\.google\.com\//.test(d?.link || "") ? String(d.link).slice(0, 400) : "", account: String(d?.account || "").slice(0, 80), addedTo: String(d?.addedTo || ""), decidedAt: String(d?.decidedAt || ""),
   });
   const rvList = $("#rv-list");
   const fmtDate = s => { if (!s) return ""; const d = parseYmd(s); return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日 周${WEEK[d.getDay()]}`; };
@@ -2234,7 +2235,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     $$("#p-review [data-rvf]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.rvf === rvFilter)));
     const sc = mailScan;
     $("#rv-scan").textContent = sc?.lastRunAt
-      ? `上次检查邮件：${new Date(sc.lastRunAt).toLocaleString("zh-CN", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })} · 读了 ${sc.scanned ?? "?"} 封，找到 ${sc.found ?? 0} 条。`
+      ? `上次检查邮件：${new Date(sc.lastRunAt).toLocaleString("zh-CN", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })} · 检查了 ${sc.scanned ?? "?"} 封，找到 ${sc.found ?? 0} 条。`
       : "还没有开始检查邮件。连接 Gmail 并开启每日检查后，新的事项会出现在这里。";
     if (rvList.contains(document.activeElement) && /^(INPUT|SELECT)$/.test(document.activeElement.tagName)) return;
     const list = Object.values(reviews).filter(r => r.status === rvFilter)
@@ -2249,7 +2250,8 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     const e = { ...r, ...(rvEdits[r.id] || {}) };
     const src = h("p", { class: "rv-src" }, `来自 ${e.from || "未知发件人"}`, e.subject ? ` · 主题「${e.subject}」` : "",
       e.receivedAt ? ` · ${new Date(e.receivedAt).toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" })} 收到` : "",
-      e.threadId ? h("span", {}, " · ", h("a", { href: `https://mail.google.com/mail/u/0/#all/${e.threadId}`, target: "_blank", rel: "noopener", text: "在 Gmail 中打开" })) : null);
+      e.account ? ` · 收件箱 ${e.account}` : "",
+      e.link || e.threadId ? h("span", {}, " · ", h("a", { href: e.link || `https://mail.google.com/mail/u/0/#all/${e.threadId}`, target: "_blank", rel: "noopener", text: "在 Gmail 中打开" })) : null);
     const top = h("div", { class: "rv-top" },
       h("span", { class: "rv-date" + (e.date ? "" : " none"), text: e.date ? fmtDate(e.date) + (e.time ? ` ${e.time}` : "") + (e.endDate && e.endDate !== e.date ? ` 至 ${fmtDate(e.endDate)}` : "") : "日期待定" }),
       e.kind ? h("span", { class: "rv-kind", text: e.kind }) : null,
