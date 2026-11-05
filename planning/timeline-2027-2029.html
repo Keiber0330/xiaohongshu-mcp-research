@@ -1,4 +1,4 @@
-<title>2027–2029 月度时间轴</title>
+<title>个人规划台</title>
 <script>try{var k=localStorage.getItem("tl-pref-skin"),m=localStorage.getItem("tl-pref-mode");if(k!=="min")document.documentElement.classList.add("sk-sys");if(m==="light"||m==="dark")document.documentElement.dataset.mode=m}catch(e){document.documentElement.classList.add("sk-sys")}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -151,8 +151,9 @@ h1 .dash { color: var(--accent); }
 /* ---------- Month view ---------- */
 .rail-wrap { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-top: 22px; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); }
 .rail-scroll { overflow-x: auto; scrollbar-width: thin; }
-.rail { display: flex; gap: 10px; min-width: 760px; }
-.rail-year { flex: 1; min-width: 0; }
+.rail { display: flex; gap: 10px; }
+.rail-year { flex: 1 0 300px; min-width: 0; }
+.add-year { margin-top: 24px; }
 .rail-year-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
 .rail-year-label button { all: unset; cursor: pointer; font-family: var(--display); font-weight: 600; color: var(--ink); font-size: 13px; }
 .rail-year-label button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
@@ -567,11 +568,11 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   <section class="panel" id="p-month" role="tabpanel" aria-labelledby="tab-month">
     <header class="top">
       <div>
-        <h1>2027<span class="dash">→</span>2029 月度时间轴</h1>
-        <p class="lede" id="lede">36 个月，每月一张卡片。点任意月份直接写下本月重点和待办事项，内容会自动保存。</p>
+        <h1>月度时间轴<span class="dash"> · </span>2026 起</h1>
+        <p class="lede" id="lede">从 2026 年 1 月开始，每月一张卡片，年份可以一直往后加。点任意月份直接写下本月重点和待办事项，内容会自动保存。</p>
       </div>
       <div class="stats" aria-live="polite">
-        <div class="stat"><b id="st-filled">0</b><span>已规划月份 / 36</span></div>
+        <div class="stat"><b id="st-filled">0</b><span id="st-total">已规划月份 / 48</span></div>
         <div class="stat"><b id="st-tasks">0</b><span>事项总数</span></div>
         <div class="stat"><b id="st-done">—</b><span>完成率</span></div>
       </div>
@@ -592,6 +593,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       <label><input type="checkbox" id="opt-filled"> 只看已填写的月份</label>
     </div>
     <div id="years"></div>
+    <button class="btn add-year ro-hide" type="button" id="m-add-year">＋ 加一年</button>
     <p class="hint">编辑提示：在事项里按 <kbd>Enter</kbd> 新起一行，在空事项里按 <kbd>Backspace</kbd> 删除它；点卡片右上角的星标把这个月设为里程碑，里程碑会自动出现在「年度大事」里。节假日为法定节日的公历日期，供排期参考。</p>
   </section>
 
@@ -900,21 +902,28 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   });
 
   // ================= Month view =================
-  const YEARS = [2027, 2028, 2029];
+  // The monthly timeline starts in January 2026 and has no fixed end: it always reaches at least three years past
+  // the current one, grows when a stored month or an approved review lies further out, and "＋ 加一年" extends it.
+  const FIRST_YEAR = 2026;
+  const YEARS = [], KEYS = [];
   const CN_NUM = ["一", "二", "三", "四"];
   const SEASON = ["冬末春初", "春夏", "盛夏入秋", "秋冬"];
-  const HOLIDAYS = {
-    "2027-01": ["元旦 1/1"], "2027-02": ["春节 2/6"], "2027-04": ["清明 4/5"], "2027-05": ["劳动节 5/1"],
-    "2027-06": ["端午 6/9"], "2027-09": ["中秋 9/15"], "2027-10": ["国庆 10/1"],
-    "2028-01": ["元旦 1/1", "春节 1/26"], "2028-04": ["清明 4/4"], "2028-05": ["劳动节 5/1", "端午 5/28"],
-    "2028-10": ["国庆 10/1", "中秋 10/3"],
-    "2029-01": ["元旦 1/1"], "2029-02": ["春节 2/13"], "2029-04": ["清明 4/4"], "2029-05": ["劳动节 5/1"],
-    "2029-06": ["端午 6/16"], "2029-09": ["中秋 9/22"], "2029-10": ["国庆 10/1"],
+  // Lunar-calendar holidays from known tables (no dates guessed beyond them); the rest are fixed or computed.
+  const LUNAR = {
+    spring: { 2026: "2/17", 2027: "2/6", 2028: "1/26", 2029: "2/13", 2030: "2/3", 2031: "1/23", 2032: "2/11", 2033: "1/31", 2034: "2/19", 2035: "2/8", 2036: "1/28" },
+    duanwu: { 2026: "6/19", 2027: "6/9", 2028: "5/28", 2029: "6/16", 2030: "6/5" },
+    midautumn: { 2026: "9/25", 2027: "9/15", 2028: "10/3", 2029: "9/22", 2030: "9/12" },
   };
-  const KEYS = [];
-  YEARS.forEach(y => { for (let m = 1; m <= 12; m++) KEYS.push(`${y}-${pad(m)}`); });
+  const qingming = y => { const yy = y % 100; return Math.floor(yy * 0.2422 + 4.81) - Math.floor(yy / 4); };   // 21st-century solar-term formula
+  function holidaysFor(y, m) {
+    const list = [];
+    const add = (name, md) => { if (md && +md.split("/")[0] === m) list.push([+md.split("/")[1], `${name} ${md}`]); };
+    add("元旦", "1/1"); add("春节", LUNAR.spring[y]); add("清明", `4/${qingming(y)}`); add("劳动节", "5/1");
+    add("端午", LUNAR.duanwu[y]); add("中秋", LUNAR.midautumn[y]); add("国庆", "10/1");
+    return list.sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  }
   const mEmpty = () => ({ theme: "", milestone: false, tasks: [] });
-  const months = Object.fromEntries(KEYS.map(k => [k, mEmpty()]));
+  const months = {};
   const mIsEmpty = s => !s.theme.trim() && !s.milestone && s.tasks.every(t => !t.text.trim());
   const cleanId = id => typeof id === "string" && /^[\w-]{1,40}$/.test(id) ? id : uid();
   const mNorm = d => ({
@@ -927,7 +936,9 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
 
   const rail = $("#rail"), yearsEl = $("#years");
   const cells = {}, cards = {};
-  YEARS.forEach(y => {
+  let monthsReady = false;   // after first paint, a newly added year also renders its counters
+  function buildMonthYear(y) {
+    YEARS.push(y);
     const rc = h("div", { class: "rail-cells" });
     rail.append(h("div", { class: "rail-year" },
       h("div", { class: "rail-year-label" }, h("button", { type: "button", text: `${y} 年`, "data-jump": `y${y}` }), h("span", { id: `rail-sum-${y}` })), rc));
@@ -935,16 +946,18 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     const sec = h("section", { class: "year", id: `y${y}`, "aria-labelledby": `yh${y}` },
       h("div", { class: "year-head" }, h("h2", { id: `yh${y}`, text: String(y) }),
         h("span", { class: "meta", text: `${leap ? 366 : 365} 天${leap ? " · 闰年，2 月有 29 天" : ""}` })));
+    const holHidden = pref.get("hol", "1") !== "1";
     for (let q = 0; q < 4; q++) {
       const row = h("div", { class: "quarter", style: `--qc: var(--q${q + 1})` },
         h("div", { class: "q-label" }, h("b", { text: `Q${q + 1}` }), h("span", { text: `第${CN_NUM[q]}季度` }), h("span", { text: `${q * 3 + 1}–${q * 3 + 3} 月` })));
       for (let i = 1; i <= 3; i++) {
         const m = q * 3 + i, key = `${y}-${pad(m)}`;
+        KEYS.push(key); months[key] = mEmpty();
         const cell = h("button", { class: "cell" + (key === nowKey ? " now" : ""), type: "button", "data-jump": `m-${key}`, title: `${y} 年 ${m} 月` }, String(m));
         cells[key] = cell; rc.append(cell);
         const days = new Date(y, m, 0).getDate();
         const wd = WEEK[new Date(y, m - 1, 1).getDay()];
-        const hol = HOLIDAYS[key] || [];
+        const hol = holidaysFor(y, m);
         const card = h("article", { class: "month empty" + (key === nowKey ? " is-now" : ""), id: `m-${key}`, "aria-label": `${y} 年 ${m} 月`, "data-key": key });
         const starBtn = h("button", { class: "icon-btn star", type: "button", "aria-pressed": "false", "aria-label": `把 ${y} 年 ${m} 月设为里程碑`, title: "设为里程碑" });
         starBtn.innerHTML = STAR_O;
@@ -953,22 +966,36 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
             h("div", { class: "m-num" }, String(m), h("small", { text: "月" })),
             h("div", { class: "m-meta" }, `${y} 年 · ${days} 天`, key === nowKey ? h("span", { class: "tag-now", text: "本月" }) : null, h("br"), `1 日周${wd}`),
             starBtn),
-          hol.length ? h("div", { class: "holidays" }, hol.map(t => h("span", { class: "hol", text: t }))) : null,
+          hol.length ? h("div", { class: "holidays", hidden: holHidden }, hol.map(t => h("span", { class: "hol", text: t }))) : null,
           h("input", { class: "theme-input", id: `theme-${key}`, type: "text", maxlength: "80", placeholder: "本月重点（可选）", "aria-label": `${y} 年 ${m} 月的重点`, autocomplete: "off" }),
           h("ul", { class: "tasks", "aria-label": `${y} 年 ${m} 月事项` }),
           h("div", { class: "add-row" }, h("span", { class: "plus", "aria-hidden": "true", text: "+" }),
             h("input", { class: "add-input", id: `add-${key}`, type: "text", maxlength: "200", placeholder: "添加事项，回车确认", "aria-label": `为 ${y} 年 ${m} 月添加事项`, autocomplete: "off" })),
           h("div", { class: "m-foot" }, h("span", { class: "count" }), h("span", { text: i === 1 ? SEASON[q] : "" }))].filter(Boolean));
+        if (store.mode === "readonly") $$("input, button.star", card).forEach(el => { el.disabled = true; });
         cards[key] = card; row.append(card);
         const p = mPath(key);
         sers[p] = () => mSer(months[key]);
         appliers[p] = d => { months[key] = d ? mNorm(d) : mEmpty(); renderCard(key); };
         focusers[p] = () => card.contains(document.activeElement);
+        if (monthsReady) { renderMeta(key); if (store.mode === "local") { const d = lsGet(p); if (d) applyRemote(p, d); } }
       }
       sec.append(row);
     }
     yearsEl.append(sec);
-  });
+    const btn = $("#m-add-year"); if (btn) btn.textContent = `＋ 加一年（${y + 1}）`;
+  }
+  // Grow the timeline to include year y (only forward; years before 2026 are not shown).
+  let monthTo = 0;
+  const MONTH_SET = "settings/months";
+  function ensureMonthYears(y) {
+    y = Math.min(y, FIRST_YEAR + 200);
+    while ((YEARS[YEARS.length - 1] || FIRST_YEAR - 1) < y) buildMonthYear((YEARS[YEARS.length - 1] || FIRST_YEAR - 1) + 1);
+    if (monthsReady) { renderSummary(); $("#st-total").textContent = `已规划月份 / ${KEYS.length}`; }
+  }
+  sers[MONTH_SET] = () => ({ to: monthTo });
+  appliers[MONTH_SET] = d => { if (Number.isInteger(d?.to) && d.to >= FIRST_YEAR) { monthTo = Math.max(monthTo, d.to); ensureMonthYears(monthTo); } };
+  ensureMonthYears(Math.max(now.getFullYear() + 3, FIRST_YEAR + 3));
 
   function renderTasks(key) {
     const ul = $(".tasks", cards[key]);
@@ -1025,8 +1052,8 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     $$(".quarter").forEach(q => q.classList.toggle("all-empty", !q.querySelector(".month:not(.empty)")));
   }
   (() => {
-    const diff = (2027 - now.getFullYear()) * 12 + (1 - (now.getMonth() + 1));
-    const extra = diff > 0 ? `距 2027 年 1 月还有 ${diff} 个月。` : months[nowKey] ? `现在是第 ${KEYS.indexOf(nowKey) + 1} 个月。` : "";
+    const idx = (now.getFullYear() - FIRST_YEAR) * 12 + now.getMonth() + 1;
+    const extra = idx > 0 ? `现在是第 ${idx} 个月。` : "";
     if (extra) $("#lede").textContent += " " + extra;
   })();
 
@@ -1111,6 +1138,14 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   optFilled.addEventListener("change", () => { pref.set("filled", optFilled.checked ? 1 : 0); applyFilter(); });
   applyHolidays(); applyFilter();
   KEYS.forEach(renderMeta);
+  monthsReady = true;
+  $("#st-total").textContent = `已规划月份 / ${KEYS.length}`;
+  $("#m-add-year").textContent = `＋ 加一年（${YEARS[YEARS.length - 1] + 1}）`;
+  $("#m-add-year").addEventListener("click", () => {
+    if (store.mode === "readonly") return;
+    monthTo = YEARS[YEARS.length - 1] + 1; ensureMonthYears(monthTo); touch(MONTH_SET);
+    requestAnimationFrame(() => jumpTo("y" + monthTo));
+  });
   renderSummary();
 
   // ================= Week view =================
@@ -1797,6 +1832,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
   function renderYears(opts) {
     const ae = document.activeElement;
     if (yPanel.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+    yrRange.to = Math.max(yrRange.to, now.getFullYear() + 10);
     if (!(ySel >= yrRange.from && ySel <= yrRange.to)) ySel = now.getFullYear() >= yrRange.from && now.getFullYear() <= yrRange.to ? now.getFullYear() : yrRange.from;
     let total = 0;
     const chips = [h("button", { class: "ychip add ro-hide", type: "button", "data-ext": "before", text: `＋ ${yrRange.from - 1}`, "aria-label": `往前加一年（${yrRange.from - 1}）` })];
@@ -2266,9 +2302,9 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
     const time = h("input", { type: "time", id: `rvh-${r.id}`, "aria-label": "时间（可选）" }); time.value = e.time;
     const cat = h("select", { id: `rvc-${r.id}`, "aria-label": "类别" }, CATS.map(([id, label]) => h("option", { value: id, text: label }))); cat.value = e.cat;
     const y = e.date ? +e.date.slice(0, 4) : 0, mKey = e.date ? e.date.slice(0, 7) : "";
-    const can = { week: !!e.date, month: !!e.date && !!months[mKey], year: !!e.date };
+    const can = { week: !!e.date, month: !!e.date && y >= FIRST_YEAR, year: !!e.date };
     const btn = t => h("button", { class: "btn" + (t === e.suggest ? " primary sugg" : ""), type: "button", "data-rvact": t, disabled: !can[t] || store.mode !== "db",
-      title: !e.date ? "先填日期" : t === "month" && !months[mKey] ? "月度时间轴只覆盖 2027–2029 年" : "", text: `加入${RV_TARGETS[t]}` });
+      title: !e.date ? "先填日期" : t === "month" && y < FIRST_YEAR ? "月度时间轴从 2026 年开始" : "", text: `加入${RV_TARGETS[t]}` });
     return h("div", { class: "rv", "data-rv": r.id }, top, title, e.why ? h("p", { class: "rv-why", text: e.why }) : null, src,
       h("div", { class: "rv-edit" }, h("label", {}, "日期", date), h("label", {}, "时间", time), h("label", {}, "类别", cat)),
       h("div", { class: "rv-acts" }, btn("week"), btn("month"), btn("year"), h("span", { class: "sp" }),
@@ -2312,7 +2348,8 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       const body = wkNorm(await readDoc(wPath(mk))); body.items.push(it);
       await writeDoc(wPath(mk), wkSer(body));
     } else if (target === "month") {
-      const key = e.date.slice(0, 7); if (!months[key]) throw new Error("月度时间轴只覆盖 2027–2029 年");
+      const key = e.date.slice(0, 7); if (y < FIRST_YEAR) throw new Error("月度时间轴从 2026 年开始");
+      if (!months[key]) { ensureMonthYears(y); if (y > monthTo) { monthTo = y; touch(MONTH_SET); } }
       months[key].tasks.push({ id: uid(), text: `${e.title}（${m}/${d.getDate()}${e.time ? " " + e.time : ""}）`, done: false });
       renderCard(key); touch(mPath(key));
     } else {
@@ -2338,7 +2375,12 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       try { canWrite = user ? await user.can("data.write") : null; } catch {}
       if (canWrite === false) goReadonly();
       const lost = () => setStatus("error", "与存储的连接已断开，刷新页面重试");
-      dbNs.collection("months").onSnapshot(s => s.docChanges().forEach(ch => { if (months[ch.doc.id]) applyRemote(mPath(ch.doc.id), ch.type === "removed" ? null : ch.doc.data()); }), lost);
+      dbNs.collection("months").onSnapshot(s => s.docChanges().forEach(ch => {
+        const mm = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(ch.doc.id); if (!mm || +mm[1] < FIRST_YEAR) return;
+        ensureMonthYears(+mm[1]);
+        applyRemote(mPath(ch.doc.id), ch.type === "removed" ? null : ch.doc.data());
+      }), lost);
+      dbNs.doc(MONTH_SET).onSnapshot(s => { if (s.exists) applyRemote(MONTH_SET, s.data()); }, lost);
       dbNs.collection("years").onSnapshot(s => s.docChanges().forEach(ch => { const y = +ch.doc.id; if (Number.isInteger(y)) { ensureYear(y); applyRemote(yPath(y), ch.type === "removed" ? null : ch.doc.data()); } }), lost);
       dbNs.doc(YR_SET).onSnapshot(s => { if (s.exists) applyRemote(YR_SET, s.data()); }, lost);
       dbNs.collection("review").onSnapshot(s => {
@@ -2348,6 +2390,7 @@ body.readonly .add-row, body.readonly .del, body.readonly .bl .place, body.reado
       dbNs.doc("settings/mailscan").onSnapshot(s => { mailScan = s.exists ? s.data() : null; renderReview(); }, lost);
     } else {
       store.mode = "local";
+      const mr = lsGet(MONTH_SET); if (mr) applyRemote(MONTH_SET, mr);
       KEYS.forEach(k => { const d = lsGet(mPath(k)); if (d) applyRemote(mPath(k), d); });
       const r = lsGet(YR_SET); if (r) applyRemote(YR_SET, r);
       for (let y = yrRange.from; y <= yrRange.to; y++) { ensureYear(y); const d = lsGet(yPath(y)); if (d) applyRemote(yPath(y), d); }
