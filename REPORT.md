@@ -244,6 +244,22 @@ python main.py mcp               # ✅ 启动，监听 http://0.0.0.0:5556/mcp
 用户从浏览器地址栏复制带 `xsec_token` 的笔记链接，脚本据此测试详情、评论、作者主页等项目。
 用这种方式拿到的结果会标注"来自链接、不是来自搜索"。
 
+### F.1c 上游更新（2026-11-12 复查）
+
+上游已经发布到 **v2.7.4**（2026-11-11），比 10 月测试用的 v2.5.5 多了 60 个提交。其中几个修复正好针对我们遇到的"搜索 0 条"：
+`2e5bfbf fix: wait for search result state`（等待搜索结果加载完成）、
+`f276474 fix(search): distinguish empty results from pending and failed requests`（区分真没有结果、还没加载完、请求失败）、
+`7983853`、`03bae2d`（处理搜索响应的时序问题）、
+`3517d63 (#872)`：小红书会把可疑会话重定向到 `/website-login/captcha`（安全验证）或登录页。新版会明确返回
+`ErrVerificationRequired` 或 `ErrLoginRequired`，不再只是超时或 0 条。
+
+本环境实测（仍无法访问小红书）：v2.7.4 编译通过，单元测试全部通过；MCP 发现仍是 **18 个工具**，与 v2.5.5 完全相同
+（`results/xpzouying_v2.7.4_tools_list.json`）。`search_feeds` 的参数仍只有 `keyword` 和 `filters`，依然**不支持分页**。
+内置浏览器的版本（148.0.7778.215）和下载地址（`cdn.one-world.ai`）都没变，前面提出的供应链疑虑仍然成立。
+
+新增 `tests/cloud_run.sh`：在可访问外网的云端会话里一键完成编译、启动（只监听 127.0.0.1，带随机 token）、
+扫码二维码、20 项检查和清理。步骤见 `HANDOFF.md`。
+
 ### F.2 MCP 协议层（实测通过）
 
 | 测试 | xpzouying | XHS-Downloader |

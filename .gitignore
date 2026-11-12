@@ -3,3 +3,5 @@ __pycache__/
 .pytest_cache/
 results/live/
 cookies.json
+results/live_cloud/raw_*.json
+results/live/raw_*.json
